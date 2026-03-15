@@ -6,6 +6,7 @@ import Caisse from './pages/Caisse';
 import QRCode from './pages/QRCode';
 import Abonnement from './pages/Abonnement';
 import Programme from './pages/Programme';
+import ResetPassword from './pages/ResetPassword';
 
 const ProtectedRoute = ({ children }) => {
   return localStorage.getItem('token') ? children : <Navigate to="/" />;
@@ -21,6 +22,7 @@ export default function App() {
       <Route path="/qrcode" element={<ProtectedRoute><QRCode /></ProtectedRoute>} />
       <Route path="/abonnement" element={<ProtectedRoute><Abonnement /></ProtectedRoute>} />
       <Route path="/programme" element={<ProtectedRoute><Programme /></ProtectedRoute>} />
+      <Route path="/reset-password" element={<ResetPassword />} />
     </Routes>
   );
 }
