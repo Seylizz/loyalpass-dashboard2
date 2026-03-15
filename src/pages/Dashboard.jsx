@@ -4,17 +4,35 @@ import Navbar from '../components/Navbar';
 import StatCard from '../components/StatCard';
 import API from '../api';
 import toast, { Toaster } from 'react-hot-toast';
+import Onboarding from './Onboarding';
+
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [restaurant, setRestaurant] = useState(JSON.parse(localStorage.getItem('restaurant') || '{}'));
   const navigate = useNavigate();
-  const restaurant = JSON.parse(localStorage.getItem('restaurant') || '{}');
 
   useEffect(() => {
     if (!localStorage.getItem('token')) { navigate('/'); return; }
     chargerStats();
+    verifierOnboarding();
   }, []);
+
+  const verifierOnboarding = async () => {
+    try {
+      const { data } = await API.get('/restaurants/profil');
+      if (data.restaurant && !data.restaurant.onboarding_complete) {
+        setShowOnboarding(true);
+      }
+    } catch (err) {
+      // Si la route n'existe pas encore, on affiche l'onboarding quand même
+      if (!restaurant.onboarding_complete) {
+        setShowOnboarding(true);
+      }
+    }
+  };
 
   const chargerStats = async () => {
     try {
@@ -30,6 +48,20 @@ export default function Dashboard() {
     <div style={{ minHeight: '100vh', background: '#F8F9FA' }}>
       <Toaster position="top-right" />
       <Navbar />
+
+      {/* Onboarding wizard */}
+      {showOnboarding && (
+        <Onboarding
+          restaurant={restaurant}
+          onComplete={(updates) => {
+            setShowOnboarding(false);
+            const updated = { ...restaurant, ...updates, onboarding_complete: true };
+            setRestaurant(updated);
+            localStorage.setItem('restaurant', JSON.stringify(updated));
+            toast.success('Programme configuré avec succès ! 🎉');
+          }}
+        />
+      )}
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 32px' }}>
 
