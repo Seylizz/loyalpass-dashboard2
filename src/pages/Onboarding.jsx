@@ -24,23 +24,57 @@ export default function Onboarding({ restaurant, onComplete }) {
     couleur: restaurant?.couleur || '#B5281C',
     logo_emoji: restaurant?.logo_emoji || '🥙',
     pts_par_euro: 10,
-    recompense_choisie: RECOMPENSES_EXEMPLES[2],
-    seuil_custom: '',
-    desc_custom: '',
-    mode: 'exemple', // 'exemple' ou 'custom'
+    recompenses_selectionnees: [],
+    recompenses_custom: [],
+    nouveauCustom: { seuil: '', desc: '' },
   });
+
+  const toggleRecompense = (r) => {
+    const existe = form.recompenses_selectionnees.find(x => x.label === r.label);
+    if (existe) {
+      setForm({ ...form, recompenses_selectionnees: form.recompenses_selectionnees.filter(x => x.label !== r.label) });
+    } else {
+      setForm({ ...form, recompenses_selectionnees: [...form.recompenses_selectionnees, r] });
+    }
+  };
+
+  const ajouterCustom = () => {
+    if (!form.nouveauCustom.seuil || !form.nouveauCustom.desc) return;
+    const nouvelle = {
+      label: form.nouveauCustom.desc,
+      seuil: parseInt(form.nouveauCustom.seuil),
+      desc: form.nouveauCustom.desc,
+    };
+    setForm({
+      ...form,
+      recompenses_custom: [...form.recompenses_custom, nouvelle],
+      recompenses_selectionnees: [...form.recompenses_selectionnees, nouvelle],
+      nouveauCustom: { seuil: '', desc: '' },
+    });
+  };
+
+  const supprimerCustom = (index) => {
+    const custom = form.recompenses_custom[index];
+    setForm({
+      ...form,
+      recompenses_custom: form.recompenses_custom.filter((_, i) => i !== index),
+      recompenses_selectionnees: form.recompenses_selectionnees.filter(x => x.label !== custom.label),
+    });
+  };
+
+  const toutesRecompenses = [...form.recompenses_selectionnees].sort((a, b) => a.seuil - b.seuil);
+  const peutContinuer = etape !== 2 || form.recompenses_selectionnees.length > 0;
 
   const handleFinish = async () => {
     setLoading(true);
     try {
-      const seuil = form.mode === 'custom' ? parseInt(form.seuil_custom) : form.recompense_choisie.seuil;
-      const desc = form.mode === 'custom' ? form.desc_custom : form.recompense_choisie.desc;
+      const premiereRecompense = toutesRecompenses[0];
       await API.post('/auth/onboarding', {
         couleur: form.couleur,
         logo_emoji: form.logo_emoji,
         pts_par_euro: form.pts_par_euro,
-        seuil_recompense: seuil,
-        description_recompense: desc,
+        seuil_recompense: premiereRecompense?.seuil || 500,
+        description_recompense: JSON.stringify(toutesRecompenses),
       });
       onComplete({ couleur: form.couleur, logo_emoji: form.logo_emoji });
     } catch (err) {
@@ -59,8 +93,9 @@ export default function Onboarding({ restaurant, onComplete }) {
     }}>
       <div style={{
         background: '#fff', borderRadius: 24, padding: '40px 44px',
-        maxWidth: 560, width: '100%',
+        maxWidth: 580, width: '100%',
         boxShadow: '0 40px 80px rgba(0,0,0,0.2)',
+        maxHeight: '90vh', overflowY: 'auto',
       }}>
 
         {/* Header */}
@@ -80,35 +115,22 @@ export default function Onboarding({ restaurant, onComplete }) {
             </div>
           </div>
           {etape === 1 && <>
-            <h2 style={{ fontSize: 26, fontWeight: 900, color: '#2A1610', letterSpacing: '-0.5px', marginBottom: 6 }}>
-              Personnalisez votre programme
-            </h2>
-            <p style={{ fontSize: 15, color: '#9B8E84', lineHeight: 1.6 }}>
-              Choisissez la couleur et l'icône qui représentent le mieux votre restaurant.
-            </p>
+            <h2 style={{ fontSize: 26, fontWeight: 900, color: '#2A1610', letterSpacing: '-0.5px', marginBottom: 6 }}>Personnalisez votre programme</h2>
+            <p style={{ fontSize: 15, color: '#9B8E84', lineHeight: 1.6 }}>Choisissez la couleur et l'icône de votre restaurant.</p>
           </>}
           {etape === 2 && <>
-            <h2 style={{ fontSize: 26, fontWeight: 900, color: '#2A1610', letterSpacing: '-0.5px', marginBottom: 6 }}>
-              Définissez vos règles de points
-            </h2>
-            <p style={{ fontSize: 15, color: '#9B8E84', lineHeight: 1.6 }}>
-              Combien de points vos clients gagnent-ils et quelle est la récompense ?
-            </p>
+            <h2 style={{ fontSize: 26, fontWeight: 900, color: '#2A1610', letterSpacing: '-0.5px', marginBottom: 6 }}>Définissez vos récompenses</h2>
+            <p style={{ fontSize: 15, color: '#9B8E84', lineHeight: 1.6 }}>Choisissez autant de récompenses que vous voulez. Vos clients les débloquent en accumulant des points.</p>
           </>}
           {etape === 3 && <>
-            <h2 style={{ fontSize: 26, fontWeight: 900, color: '#2A1610', letterSpacing: '-0.5px', marginBottom: 6 }}>
-              Votre programme est prêt ! 🎉
-            </h2>
-            <p style={{ fontSize: 15, color: '#9B8E84', lineHeight: 1.6 }}>
-              Imprimez votre QR code et placez-le sur votre comptoir. Vos clients peuvent s'inscrire immédiatement.
-            </p>
+            <h2 style={{ fontSize: 26, fontWeight: 900, color: '#2A1610', letterSpacing: '-0.5px', marginBottom: 6 }}>Votre programme est prêt ! 🎉</h2>
+            <p style={{ fontSize: 15, color: '#9B8E84', lineHeight: 1.6 }}>Imprimez votre QR code depuis l'onglet QR Code et placez-le sur votre comptoir.</p>
           </>}
         </div>
 
         {/* ÉTAPE 1 — Couleur & Emoji */}
         {etape === 1 && (
           <div>
-            {/* Prévisualisation */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
               <div style={{
                 width: 80, height: 80, borderRadius: 22,
@@ -118,8 +140,6 @@ export default function Onboarding({ restaurant, onComplete }) {
                 transition: 'all 0.2s',
               }}>{form.logo_emoji}</div>
             </div>
-
-            {/* Couleurs */}
             <div style={{ marginBottom: 24 }}>
               <label style={{ fontSize: 13, fontWeight: 700, color: '#2A1610', display: 'block', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>Couleur principale</label>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -132,8 +152,6 @@ export default function Onboarding({ restaurant, onComplete }) {
                 ))}
               </div>
             </div>
-
-            {/* Emojis */}
             <div>
               <label style={{ fontSize: 13, fontWeight: 700, color: '#2A1610', display: 'block', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>Icône du restaurant</label>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -150,14 +168,11 @@ export default function Onboarding({ restaurant, onComplete }) {
           </div>
         )}
 
-        {/* ÉTAPE 2 — Points & Récompense */}
+        {/* ÉTAPE 2 — Points & Récompenses multiples */}
         {etape === 2 && (
           <div>
-            {/* Points par euro */}
             <div style={{ marginBottom: 28 }}>
-              <label style={{ fontSize: 13, fontWeight: 700, color: '#2A1610', display: 'block', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
-                Règle des points
-              </label>
+              <label style={{ fontSize: 13, fontWeight: 700, color: '#2A1610', display: 'block', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>Règle des points</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#F3F0EA', borderRadius: 14, padding: '16px 20px' }}>
                 <span style={{ fontSize: 15, color: '#2A1610', fontWeight: 600 }}>1€ dépensé =</span>
                 <input
@@ -171,68 +186,91 @@ export default function Onboarding({ restaurant, onComplete }) {
                 <span style={{ fontSize: 15, color: '#2A1610', fontWeight: 600 }}>points</span>
               </div>
               <p style={{ fontSize: 13, color: '#9B8E84', marginTop: 8 }}>
-                Exemple : un client qui dépense 20€ gagne <strong style={{ color: '#B5281C' }}>{form.pts_par_euro * 20} points</strong>
+                Exemple : 20€ dépensés = <strong style={{ color: '#B5281C' }}>{form.pts_par_euro * 20} points</strong>
               </p>
             </div>
 
-            {/* Récompense */}
             <div>
-              <label style={{ fontSize: 13, fontWeight: 700, color: '#2A1610', display: 'block', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
-                Récompense débloquée à
-              </label>
-
-              {/* Exemples */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-                {RECOMPENSES_EXEMPLES.map((r, i) => (
-                  <button key={i} onClick={() => setForm({ ...form, recompense_choisie: r, mode: 'exemple' })} style={{
-                    padding: '12px 14px', borderRadius: 12, textAlign: 'left',
-                    border: form.mode === 'exemple' && form.recompense_choisie.label === r.label ? '2px solid #B5281C' : '2px solid #E8E1D5',
-                    background: form.mode === 'exemple' && form.recompense_choisie.label === r.label ? 'rgba(181,40,28,0.05)' : '#fff',
-                    cursor: 'pointer', transition: 'all 0.2s',
-                  }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#2A1610' }}>{r.label}</div>
-                    <div style={{ fontSize: 12, color: '#B5281C', fontWeight: 700, marginTop: 2 }}>{r.seuil} pts</div>
-                  </button>
-                ))}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, color: '#2A1610', textTransform: 'uppercase', letterSpacing: 1 }}>Récompenses</label>
+                {form.recompenses_selectionnees.length > 0 && (
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#B5281C', background: 'rgba(181,40,28,0.08)', padding: '3px 10px', borderRadius: 100 }}>
+                    {form.recompenses_selectionnees.length} sélectionnée{form.recompenses_selectionnees.length > 1 ? 's' : ''}
+                  </span>
+                )}
               </div>
 
-              {/* Custom */}
-              <button onClick={() => setForm({ ...form, mode: 'custom' })} style={{
-                width: '100%', padding: '12px 16px', borderRadius: 12, textAlign: 'left',
-                border: form.mode === 'custom' ? '2px solid #B5281C' : '2px solid #E8E1D5',
-                background: form.mode === 'custom' ? 'rgba(181,40,28,0.05)' : '#fff',
-                cursor: 'pointer', fontSize: 13, fontWeight: 700, color: '#2A1610',
-                fontFamily: "'Outfit', sans-serif",
-              }}>
-                + Créer une récompense personnalisée
-              </button>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+                {RECOMPENSES_EXEMPLES.map((r, i) => {
+                  const selectionne = form.recompenses_selectionnees.find(x => x.label === r.label);
+                  return (
+                    <button key={i} onClick={() => toggleRecompense(r)} style={{
+                      padding: '12px 14px', borderRadius: 12, textAlign: 'left',
+                      border: selectionne ? '2px solid #B5281C' : '2px solid #E8E1D5',
+                      background: selectionne ? 'rgba(181,40,28,0.05)' : '#fff',
+                      cursor: 'pointer', transition: 'all 0.2s', position: 'relative',
+                    }}>
+                      {selectionne && (
+                        <div style={{ position: 'absolute', top: 8, right: 8, width: 18, height: 18, borderRadius: '50%', background: '#B5281C', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="10" height="10" fill="none" stroke="white" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                      )}
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#2A1610' }}>{r.label}</div>
+                      <div style={{ fontSize: 12, color: '#B5281C', fontWeight: 700, marginTop: 2 }}>{r.seuil} pts</div>
+                    </button>
+                  );
+                })}
+              </div>
 
-              {form.mode === 'custom' && (
-                <div style={{ marginTop: 12, display: 'flex', gap: 10 }}>
-                  <input
-                    type="number" placeholder="Seuil (pts)" value={form.seuil_custom}
-                    onChange={e => setForm({ ...form, seuil_custom: e.target.value })}
-                    style={{ width: 110, padding: '10px 12px', borderRadius: 10, border: '1px solid #E8E1D5', fontSize: 14, fontFamily: "'Outfit', sans-serif", outline: 'none' }}
-                    onFocus={e => e.target.style.borderColor = '#B5281C'}
-                    onBlur={e => e.target.style.borderColor = '#E8E1D5'}
-                  />
-                  <input
-                    type="text" placeholder="Description de la récompense" value={form.desc_custom}
-                    onChange={e => setForm({ ...form, desc_custom: e.target.value })}
-                    style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid #E8E1D5', fontSize: 14, fontFamily: "'Outfit', sans-serif", outline: 'none' }}
-                    onFocus={e => e.target.style.borderColor = '#B5281C'}
-                    onBlur={e => e.target.style.borderColor = '#E8E1D5'}
-                  />
+              {form.recompenses_custom.length > 0 && (
+                <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {form.recompenses_custom.map((r, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(181,40,28,0.05)', border: '2px solid #B5281C', borderRadius: 12, padding: '10px 14px' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#2A1610' }}>{r.label}</div>
+                        <div style={{ fontSize: 12, color: '#B5281C', fontWeight: 700 }}>{r.seuil} pts</div>
+                      </div>
+                      <button onClick={() => supprimerCustom(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9B8E84', fontSize: 20, padding: 4, lineHeight: 1 }}>×</button>
+                    </div>
+                  ))}
                 </div>
+              )}
+
+              <div style={{ border: '2px dashed #E8E1D5', borderRadius: 12, padding: 14 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#9B8E84', marginBottom: 10 }}>+ Ajouter une récompense personnalisée</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    type="number" placeholder="Points"
+                    value={form.nouveauCustom.seuil}
+                    onChange={e => setForm({ ...form, nouveauCustom: { ...form.nouveauCustom, seuil: e.target.value } })}
+                    style={{ width: 90, padding: '9px 12px', borderRadius: 10, border: '1px solid #E8E1D5', fontSize: 14, fontFamily: "'Outfit', sans-serif", outline: 'none' }}
+                    onFocus={e => e.target.style.borderColor = '#B5281C'}
+                    onBlur={e => e.target.style.borderColor = '#E8E1D5'}
+                  />
+                  <input
+                    type="text" placeholder="Ex: Café offert"
+                    value={form.nouveauCustom.desc}
+                    onChange={e => setForm({ ...form, nouveauCustom: { ...form.nouveauCustom, desc: e.target.value } })}
+                    style={{ flex: 1, padding: '9px 12px', borderRadius: 10, border: '1px solid #E8E1D5', fontSize: 14, fontFamily: "'Outfit', sans-serif", outline: 'none' }}
+                    onFocus={e => e.target.style.borderColor = '#B5281C'}
+                    onBlur={e => e.target.style.borderColor = '#E8E1D5'}
+                  />
+                  <button onClick={ajouterCustom} style={{ padding: '9px 16px', borderRadius: 10, background: '#B5281C', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 14, fontFamily: "'Outfit', sans-serif" }}>
+                    Ajouter
+                  </button>
+                </div>
+              </div>
+
+              {form.recompenses_selectionnees.length === 0 && (
+                <p style={{ fontSize: 13, color: '#B5281C', marginTop: 10, fontWeight: 600 }}>⚠️ Sélectionnez au moins une récompense pour continuer.</p>
               )}
             </div>
           </div>
         )}
 
-        {/* ÉTAPE 3 — Résumé + QR */}
+        {/* ÉTAPE 3 — Résumé */}
         {etape === 3 && (
           <div>
-            {/* Résumé */}
             <div style={{ background: '#F3F0EA', borderRadius: 16, padding: 20, marginBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
                 <div style={{ width: 52, height: 52, borderRadius: 14, background: form.couleur, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>
@@ -243,23 +281,26 @@ export default function Onboarding({ restaurant, onComplete }) {
                   <div style={{ fontSize: 13, color: '#9B8E84', marginTop: 2 }}>Programme de fidélité actif</div>
                 </div>
               </div>
-              {[
-                { label: '1€ dépensé =', val: `${form.pts_par_euro} points` },
-                { label: 'Récompense à', val: `${form.mode === 'custom' ? form.seuil_custom : form.recompense_choisie.seuil} pts` },
-                { label: 'Récompense', val: form.mode === 'custom' ? form.desc_custom : form.recompense_choisie.desc },
-              ].map(({ label, val }) => (
-                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, paddingBottom: 8, marginBottom: 8, borderBottom: '1px solid #E8E1D5' }}>
-                  <span style={{ color: '#9B8E84', fontWeight: 600 }}>{label}</span>
-                  <span style={{ color: '#2A1610', fontWeight: 700 }}>{val}</span>
-                </div>
-              ))}
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, paddingBottom: 12, marginBottom: 12, borderBottom: '1px solid #E8E1D5' }}>
+                <span style={{ color: '#9B8E84', fontWeight: 600 }}>1€ dépensé =</span>
+                <span style={{ color: '#2A1610', fontWeight: 700 }}>{form.pts_par_euro} points</span>
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#2A1610', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>
+                {toutesRecompenses.length} récompense{toutesRecompenses.length > 1 ? 's' : ''}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {toutesRecompenses.map((r, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', borderRadius: 10, padding: '10px 14px' }}>
+                    <span style={{ fontSize: 14, color: '#2A1610', fontWeight: 600 }}>{r.label}</span>
+                    <span style={{ fontSize: 13, color: '#B5281C', fontWeight: 700 }}>{r.seuil} pts</span>
+                  </div>
+                ))}
+              </div>
             </div>
-
-            {/* Message QR */}
             <div style={{ background: 'rgba(181,40,28,0.06)', border: '1px solid rgba(181,40,28,0.2)', borderRadius: 14, padding: '14px 18px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
               <div style={{ fontSize: 20, flexShrink: 0 }}>💡</div>
               <div style={{ fontSize: 14, color: '#2A1610', lineHeight: 1.6 }}>
-                Votre QR code d'inscription est disponible dans l'onglet <strong>QR Code</strong> du dashboard. Imprimez-le et placez-le sur votre comptoir !
+                Votre QR code est disponible dans l'onglet <strong>QR Code</strong> du dashboard. Imprimez-le et placez-le sur votre comptoir !
               </div>
             </div>
           </div>
@@ -276,12 +317,19 @@ export default function Onboarding({ restaurant, onComplete }) {
           ) : <div />}
 
           {etape < 3 ? (
-            <button onClick={() => setEtape(etape + 1)} style={{
-              padding: '14px 32px', borderRadius: 12, border: 'none',
-              background: form.couleur, color: '#fff', fontWeight: 900, fontSize: 15,
-              cursor: 'pointer', fontFamily: "'Outfit', sans-serif",
-              boxShadow: `0 8px 20px -6px ${form.couleur}88`,
-            }}>Continuer →</button>
+            <button
+              onClick={() => peutContinuer && setEtape(etape + 1)}
+              disabled={!peutContinuer}
+              style={{
+                padding: '14px 32px', borderRadius: 12, border: 'none',
+                background: peutContinuer ? form.couleur : '#E8E1D5',
+                color: peutContinuer ? '#fff' : '#9B8E84',
+                fontWeight: 900, fontSize: 15,
+                cursor: peutContinuer ? 'pointer' : 'not-allowed',
+                fontFamily: "'Outfit', sans-serif",
+                boxShadow: peutContinuer ? `0 8px 20px -6px ${form.couleur}88` : 'none',
+                transition: 'all 0.2s',
+              }}>Continuer →</button>
           ) : (
             <button onClick={handleFinish} disabled={loading} style={{
               padding: '14px 32px', borderRadius: 12, border: 'none',
