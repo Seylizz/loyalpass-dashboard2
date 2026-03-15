@@ -56,22 +56,40 @@ export default function Login() {
     setLoading(true);
     try {
       const endpoint = mode === 'connexion' ? '/auth/connexion' : '/auth/inscription';
-      const payload = mode === 'inscription' ? { ...form, telephone: `${form.indicatif}${form.telephone}` } : form;
+      const payload = mode === 'inscription'
+        ? { ...form, telephone: `${form.indicatif}${form.telephone}` }
+        : form;
       const { data } = await API.post(endpoint, payload);
-      // Rester connecté : localStorage (persiste) ou sessionStorage (expire à la fermeture)
+
+      // Si vérification email requise → rediriger vers la page de vérification
+      if (data.email_verification_requise) {
+        localStorage.setItem('email_a_verifier', form.email);
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('restaurant', JSON.stringify(data.restaurant));
+        if (mode === 'inscription') {
+          localStorage.removeItem('onboarding_done');
+          localStorage.setItem('nouvelle_inscription', 'true');
+        }
+        navigate('/verifier-email');
+        return;
+      }
+
+      // Connexion normale
       const storage = resterConnecte ? localStorage : sessionStorage;
       storage.setItem('token', data.token);
       storage.setItem('restaurant', JSON.stringify(data.restaurant));
-      if (mode === 'inscription') {
-        localStorage.removeItem('onboarding_done');
-        localStorage.setItem('nouvelle_inscription', 'true');
-      } else {
-        localStorage.setItem('onboarding_done', 'true');
-        localStorage.removeItem('nouvelle_inscription');
-      }
-      toast.success(mode === 'connexion' ? 'Connexion réussie !' : 'Compte créé !');
+      localStorage.setItem('onboarding_done', 'true');
+      localStorage.removeItem('nouvelle_inscription');
+
+      toast.success('Connexion réussie !');
       navigate('/dashboard');
     } catch (err) {
+      // Si email non vérifié lors d'une connexion
+      if (err.response?.data?.email_verification_requise) {
+        localStorage.setItem('email_a_verifier', form.email);
+        navigate('/verifier-email');
+        return;
+      }
       toast.error(err.response?.data?.message || 'Erreur de connexion');
     }
     setLoading(false);
@@ -96,11 +114,13 @@ export default function Login() {
       <Toaster position="top-right" />
 
       {/* Gauche */}
-      <div className="login-left" style={{ background: `linear-gradient(160deg, #2A1610 0%, #1A0D08 60%, #3D1F17 100%)`, padding: 60, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
+      <div className="login-left" style={{ background: 'linear-gradient(160deg, #2A1610 0%, #1A0D08 60%, #3D1F17 100%)', padding: 60, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', background: 'rgba(181,40,28,0.12)', top: -100, right: -100, pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', width: 250, height: 250, borderRadius: '50%', background: 'rgba(217,119,6,0.07)', bottom: 80, left: -60, pointerEvents: 'none' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
-          <div style={{ width: 44, height: 44, background: C.primary, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, boxShadow: '0 8px 24px rgba(181,40,28,0.4)' }}>🥙</div>
+          <div style={{ width: 44, height: 44, background: C.primary, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(181,40,28,0.4)' }}>
+            <svg width="22" height="22" fill="white" stroke="white" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+          </div>
           <span style={{ fontSize: 22, fontWeight: 900, color: 'white', letterSpacing: '-0.5px' }}>LoyalPass</span>
         </div>
         <div style={{ position: 'relative' }}>
@@ -150,7 +170,7 @@ export default function Login() {
                       <svg width="22" height="22" fill="none" stroke="#059669" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
                     </div>
                     <h3 style={{ fontSize: 18, fontWeight: 900, color: C.text, marginBottom: 8 }}>Email envoyé !</h3>
-                    <p style={{ fontSize: 14, color: C.gray, lineHeight: 1.6, marginBottom: 18 }}>Vérifiez votre boîte mail à <strong>{forgotEmail}</strong>. Le lien est valable 1 heure.</p>
+                    <p style={{ fontSize: 14, color: C.gray, lineHeight: 1.6, marginBottom: 18 }}>Vérifiez votre boîte mail à <strong>{forgotEmail}</strong>.</p>
                     <button onClick={() => { setShowForgot(false); setForgotSent(false); setForgotEmail(''); }} style={{ background: C.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '11px 24px', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'Lato, sans-serif' }}>Fermer</button>
                   </div>
                 )}
@@ -218,7 +238,7 @@ export default function Login() {
               {mode === 'inscription' && form.mot_de_passe.length > 0 && (
                 <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {[{ok:mdpCheck.longueur,label:'8 caractères minimum'},{ok:mdpCheck.majuscule,label:'Une lettre majuscule'},{ok:mdpCheck.chiffre,label:'Un chiffre'}].map(({ok,label}) => (
-                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: ok?'#059669':'#E74C3C', fontWeight: 700, transition: 'color 0.2s' }}>
+                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: ok?'#059669':'#E74C3C', fontWeight: 700 }}>
                       <span style={{ fontSize: 14 }}>{ok?'✓':'✕'}</span> {label}
                     </div>
                   ))}
@@ -227,10 +247,9 @@ export default function Login() {
               {erreurs.mot_de_passe && <p style={{ fontSize: 12, color: '#E74C3C', marginTop: 4, fontWeight: 700 }}>{erreurs.mot_de_passe}</p>}
             </div>
 
-            {/* Rester connecté + mot de passe oublié */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: -4 }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                <div onClick={() => setResterConnecte(!resterConnecte)} style={{ width: 18, height: 18, borderRadius: 5, border: `2px solid ${resterConnecte ? C.primary : C.border}`, background: resterConnecte ? C.primary : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', flexShrink: 0, cursor: 'pointer' }}>
+                <div onClick={() => setResterConnecte(!resterConnecte)} style={{ width: 18, height: 18, borderRadius: 5, border: `2px solid ${resterConnecte?C.primary:C.border}`, background: resterConnecte?C.primary:'#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', flexShrink: 0, cursor: 'pointer' }}>
                   {resterConnecte && <svg width="10" height="10" fill="none" stroke="white" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
                 </div>
                 <span style={{ fontSize: 13, color: C.text, fontWeight: 600 }}>Rester connecté</span>

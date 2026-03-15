@@ -8,6 +8,7 @@ import QRCode from './pages/QRCode';
 import Abonnement from './pages/Abonnement';
 import Programme from './pages/Programme';
 import ResetPassword from './pages/ResetPassword';
+import VerifierEmail from './pages/VerifierEmail';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -19,6 +20,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/verifier-email" element={<VerifierEmail />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
       <Route path="/caisse" element={<ProtectedRoute><Caisse /></ProtectedRoute>} />
