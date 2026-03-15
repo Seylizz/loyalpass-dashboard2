@@ -21,13 +21,13 @@ export default function Dashboard() {
   }, []);
 
   const verifierOnboarding = async () => {
+    if (localStorage.getItem('onboarding_done')) return;
     try {
       const { data } = await API.get('/restaurants/profil');
       if (data.restaurant && !data.restaurant.onboarding_complete) {
         setShowOnboarding(true);
       }
     } catch (err) {
-      // Si la route n'existe pas encore, on affiche l'onboarding quand même
       if (!restaurant.onboarding_complete) {
         setShowOnboarding(true);
       }
@@ -49,12 +49,12 @@ export default function Dashboard() {
       <Toaster position="top-right" />
       <Navbar />
 
-      {/* Onboarding wizard */}
       {showOnboarding && (
         <Onboarding
           restaurant={restaurant}
           onComplete={(updates) => {
             setShowOnboarding(false);
+            localStorage.setItem('onboarding_done', 'true');
             const updated = { ...restaurant, ...updates, onboarding_complete: true };
             setRestaurant(updated);
             localStorage.setItem('restaurant', JSON.stringify(updated));
@@ -65,7 +65,6 @@ export default function Dashboard() {
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 32px' }}>
 
-        {/* Header */}
         <div style={{ marginBottom: '36px', animation: 'fadeUp 0.5s ease' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '2px', textTransform: 'uppercase', color: '#C0392B', marginBottom: '8px' }}>
             Vue d'ensemble
@@ -86,7 +85,6 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
-            {/* Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
               <StatCard icon="👥" label="Total clients" value={stats?.total_clients || 0} couleur="#FDEDEC" delay={0} />
               <StatCard icon="📅" label="Actifs ce mois" value={stats?.clients_ce_mois || 0} couleur="#EAFAF1" delay={0.1} />
@@ -94,10 +92,8 @@ export default function Dashboard() {
               <StatCard icon="🎁" label="Récompenses" value={stats?.recompenses_utilisees || 0} couleur="#EAF4FB" delay={0.3} />
             </div>
 
-            {/* Top clients + Actions rapides */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '20px' }}>
 
-              {/* Top clients */}
               <div style={{
                 background: 'white', borderRadius: '20px',
                 border: '1px solid #EAEAF0',
@@ -161,7 +157,6 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {/* Actions rapides */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', animation: 'fadeUp 0.5s ease 0.4s both' }}>
                 <div style={{ fontSize: '13px', fontWeight: '700', color: '#9B9BB4', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   Actions rapides
