@@ -21,17 +21,15 @@ export default function Dashboard() {
   }, []);
 
   const verifierOnboarding = async () => {
+    // N'afficher que si c'est une nouvelle inscription
     if (localStorage.getItem('onboarding_done')) return;
+    if (!localStorage.getItem('nouvelle_inscription')) return;
     try {
       const { data } = await API.get('/restaurants/profil');
       if (data.restaurant && !data.restaurant.onboarding_complete) {
         setShowOnboarding(true);
       }
-    } catch (err) {
-      if (!restaurant.onboarding_complete) {
-        setShowOnboarding(true);
-      }
-    }
+    } catch (err) {}
   };
 
   const chargerStats = async () => {
@@ -55,6 +53,7 @@ export default function Dashboard() {
           onComplete={(updates) => {
             setShowOnboarding(false);
             localStorage.setItem('onboarding_done', 'true');
+            localStorage.removeItem('nouvelle_inscription');
             const updated = { ...restaurant, ...updates, onboarding_complete: true };
             setRestaurant(updated);
             localStorage.setItem('restaurant', JSON.stringify(updated));

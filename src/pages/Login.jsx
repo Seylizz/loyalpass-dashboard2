@@ -18,11 +18,11 @@ export default function Login() {
       localStorage.setItem('restaurant', JSON.stringify(data.restaurant));
       // Si c'est une inscription, supprimer onboarding_done pour afficher le wizard
       if (mode === 'inscription') {
-      // Nouvelle inscription → afficher le wizard
         localStorage.removeItem('onboarding_done');
+        localStorage.setItem('nouvelle_inscription', 'true');
       } else {
-        // Connexion → ne jamais afficher le wizard
-          localStorage.setItem('onboarding_done', 'true');
+        localStorage.setItem('onboarding_done', 'true');
+        localStorage.removeItem('nouvelle_inscription');
       }
       toast.success(mode === 'connexion' ? 'Connexion réussie !' : 'Compte créé !');
       navigate('/dashboard');
