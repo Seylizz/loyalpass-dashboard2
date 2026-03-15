@@ -4,39 +4,39 @@ import API from '../api';
 import toast, { Toaster } from 'react-hot-toast';
 
 const INDICATIFS = [
-  { code: '+33', pays: 'France 🇫🇷' },
-  { code: '+32', pays: 'Belgique 🇧🇪' },
-  { code: '+41', pays: 'Suisse 🇨🇭' },
-  { code: '+352', pays: 'Luxembourg 🇱🇺' },
-  { code: '+1', pays: 'USA/Canada 🇺🇸' },
-  { code: '+44', pays: 'UK 🇬🇧' },
-  { code: '+49', pays: 'Allemagne 🇩🇪' },
-  { code: '+34', pays: 'Espagne 🇪🇸' },
-  { code: '+39', pays: 'Italie 🇮🇹' },
-  { code: '+351', pays: 'Portugal 🇵🇹' },
-  { code: '+31', pays: 'Pays-Bas 🇳🇱' },
-  { code: '+212', pays: 'Maroc 🇲🇦' },
-  { code: '+213', pays: 'Algérie 🇩🇿' },
-  { code: '+216', pays: 'Tunisie 🇹🇳' },
-  { code: '+221', pays: 'Sénégal 🇸🇳' },
-  { code: '+225', pays: "Côte d'Ivoire 🇨🇮" },
-  { code: '+237', pays: 'Cameroun 🇨🇲' },
-  { code: '+243', pays: 'Congo RDC 🇨🇩' },
-  { code: '+20', pays: 'Égypte 🇪🇬' },
-  { code: '+27', pays: 'Afrique du Sud 🇿🇦' },
-  { code: '+55', pays: 'Brésil 🇧🇷' },
-  { code: '+52', pays: 'Mexique 🇲🇽' },
-  { code: '+54', pays: 'Argentine 🇦🇷' },
-  { code: '+57', pays: 'Colombie 🇨🇴' },
-  { code: '+86', pays: 'Chine 🇨🇳' },
-  { code: '+81', pays: 'Japon 🇯🇵' },
-  { code: '+82', pays: 'Corée du Sud 🇰🇷' },
-  { code: '+91', pays: 'Inde 🇮🇳' },
-  { code: '+971', pays: 'Émirats 🇦🇪' },
-  { code: '+966', pays: 'Arabie Saoudite 🇸🇦' },
-  { code: '+90', pays: 'Turquie 🇹🇷' },
-  { code: '+7', pays: 'Russie 🇷🇺' },
-  { code: '+61', pays: 'Australie 🇦🇺' },
+  { code: '+33', pays: 'France' },
+  { code: '+32', pays: 'Belgique' },
+  { code: '+41', pays: 'Suisse' },
+  { code: '+352', pays: 'Luxembourg' },
+  { code: '+1', pays: 'USA/Canada' },
+  { code: '+44', pays: 'Royaume-Uni' },
+  { code: '+49', pays: 'Allemagne' },
+  { code: '+34', pays: 'Espagne' },
+  { code: '+39', pays: 'Italie' },
+  { code: '+351', pays: 'Portugal' },
+  { code: '+31', pays: 'Pays-Bas' },
+  { code: '+212', pays: 'Maroc' },
+  { code: '+213', pays: 'Algérie' },
+  { code: '+216', pays: 'Tunisie' },
+  { code: '+221', pays: 'Sénégal' },
+  { code: '+225', pays: "Côte d'Ivoire" },
+  { code: '+237', pays: 'Cameroun' },
+  { code: '+243', pays: 'Congo RDC' },
+  { code: '+20', pays: 'Égypte' },
+  { code: '+27', pays: 'Afrique du Sud' },
+  { code: '+55', pays: 'Brésil' },
+  { code: '+52', pays: 'Mexique' },
+  { code: '+54', pays: 'Argentine' },
+  { code: '+57', pays: 'Colombie' },
+  { code: '+86', pays: 'Chine' },
+  { code: '+81', pays: 'Japon' },
+  { code: '+82', pays: 'Corée du Sud' },
+  { code: '+91', pays: 'Inde' },
+  { code: '+971', pays: 'Émirats Arabes Unis' },
+  { code: '+966', pays: 'Arabie Saoudite' },
+  { code: '+90', pays: 'Turquie' },
+  { code: '+7', pays: 'Russie' },
+  { code: '+61', pays: 'Australie' },
 ];
 
 const validerEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -54,6 +54,8 @@ export default function Login() {
   const [showMdp, setShowMdp] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
   const [erreurs, setErreurs] = useState({});
   const navigate = useNavigate();
 
@@ -64,9 +66,7 @@ export default function Login() {
       if (!form.telephone) e.telephone = 'Téléphone requis';
       if (!validerEmail(form.email)) e.email = 'Adresse email invalide';
       const mdpCheck = validerMotDePasse(form.mot_de_passe);
-      if (!mdpCheck.longueur || !mdpCheck.majuscule || !mdpCheck.chiffre) {
-        e.mot_de_passe = 'Mot de passe trop faible';
-      }
+      if (!mdpCheck.longueur || !mdpCheck.majuscule || !mdpCheck.chiffre) e.mot_de_passe = 'Mot de passe trop faible';
     } else {
       if (!form.email) e.email = 'Email requis';
       if (!form.mot_de_passe) e.mot_de_passe = 'Mot de passe requis';
@@ -101,17 +101,30 @@ export default function Login() {
     setLoading(false);
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') handleSubmit();
+  const handleForgot = async () => {
+    if (!validerEmail(forgotEmail)) {
+      toast.error('Adresse email invalide');
+      return;
+    }
+    setForgotLoading(true);
+    try {
+      await API.post('/auth/mot-de-passe-oublie', { email: forgotEmail });
+      setForgotSent(true);
+    } catch (err) {
+      toast.error('Erreur lors de l\'envoi');
+    }
+    setForgotLoading(false);
   };
 
+  const handleKeyDown = (e) => { if (e.key === 'Enter') handleSubmit(); };
   const mdpCheck = validerMotDePasse(form.mot_de_passe);
+  const mdpTouche = form.mot_de_passe.length > 0;
 
   return (
     <div style={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: '1fr 1fr', fontFamily: 'Outfit, sans-serif' }}>
       <Toaster position="top-right" toastOptions={{ style: { fontFamily: 'Outfit, sans-serif', fontWeight: '600' } }} />
 
-      {/* Gauche — Branding */}
+      {/* Gauche */}
       <div style={{ background: 'linear-gradient(160deg, #1A1A2E 0%, #16213E 50%, #0F3460 100%)', padding: '60px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', width: '400px', height: '400px', borderRadius: '50%', background: 'rgba(192,57,43,0.12)', top: '-100px', right: '-100px', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', width: '250px', height: '250px', borderRadius: '50%', background: 'rgba(192,57,43,0.07)', bottom: '80px', left: '-60px', pointerEvents: 'none' }} />
@@ -139,7 +152,7 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Droite — Formulaire */}
+      {/* Droite */}
       <div style={{ background: '#F8F9FA', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 80px', overflowY: 'auto' }}>
         <div style={{ width: '100%', maxWidth: '400px' }}>
 
@@ -147,24 +160,38 @@ export default function Login() {
           {showForgot && (
             <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
               <div style={{ background: 'white', borderRadius: 20, padding: 36, maxWidth: 400, width: '100%', margin: 24, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-                <h3 style={{ fontSize: 22, fontWeight: 900, color: '#1A1A2E', marginBottom: 8 }}>Mot de passe oublié</h3>
-                <p style={{ fontSize: 14, color: '#9B9BB4', marginBottom: 24, lineHeight: 1.6 }}>Contactez le support LoyalPass pour réinitialiser votre mot de passe.</p>
-                <input
-                  type="email" placeholder="Votre adresse email"
-                  value={forgotEmail}
-                  onChange={e => setForgotEmail(e.target.value)}
-                  style={{ width: '100%', padding: '13px 16px', borderRadius: 11, border: '1.5px solid #EAEAF0', fontSize: 14, outline: 'none', fontFamily: 'Outfit, sans-serif', marginBottom: 16 }}
-                  onFocus={e => e.target.style.borderColor = '#C0392B'}
-                  onBlur={e => e.target.style.borderColor = '#EAEAF0'}
-                />
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <button onClick={() => { toast.success('Email envoyé ! Vérifiez votre boîte mail.'); setShowForgot(false); }} style={{ flex: 1, background: 'linear-gradient(135deg, #C0392B, #E74C3C)', color: 'white', border: 'none', borderRadius: 10, padding: '12px', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'Outfit, sans-serif' }}>
-                    Envoyer
-                  </button>
-                  <button onClick={() => setShowForgot(false)} style={{ flex: 1, background: '#F8F9FA', color: '#1A1A2E', border: '1px solid #EAEAF0', borderRadius: 10, padding: '12px', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'Outfit, sans-serif' }}>
-                    Annuler
-                  </button>
-                </div>
+                {!forgotSent ? <>
+                  <h3 style={{ fontSize: 22, fontWeight: 900, color: '#1A1A2E', marginBottom: 8 }}>Mot de passe oublié</h3>
+                  <p style={{ fontSize: 14, color: '#9B9BB4', marginBottom: 24, lineHeight: 1.6 }}>Entrez votre adresse email. Vous recevrez un lien pour réinitialiser votre mot de passe.</p>
+                  <input type="email" placeholder="Votre adresse email" value={forgotEmail}
+                    onChange={e => setForgotEmail(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleForgot()}
+                    style={{ width: '100%', padding: '13px 16px', borderRadius: 11, border: '1.5px solid #EAEAF0', fontSize: 14, outline: 'none', fontFamily: 'Outfit, sans-serif', marginBottom: 16 }}
+                    onFocus={e => e.target.style.borderColor = '#C0392B'}
+                    onBlur={e => e.target.style.borderColor = '#EAEAF0'}
+                  />
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button onClick={handleForgot} disabled={forgotLoading} style={{ flex: 1, background: 'linear-gradient(135deg, #C0392B, #E74C3C)', color: 'white', border: 'none', borderRadius: 10, padding: '12px', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'Outfit, sans-serif' }}>
+                      {forgotLoading ? '⏳...' : 'Envoyer le lien'}
+                    </button>
+                    <button onClick={() => { setShowForgot(false); setForgotSent(false); setForgotEmail(''); }} style={{ flex: 1, background: '#F8F9FA', color: '#1A1A2E', border: '1px solid #EAEAF0', borderRadius: 10, padding: '12px', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'Outfit, sans-serif' }}>
+                      Annuler
+                    </button>
+                  </div>
+                </> : <>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#ECFDF5', border: '1px solid #A7F3D0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                      <svg width="24" height="24" fill="none" stroke="#059669" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <h3 style={{ fontSize: 20, fontWeight: 900, color: '#1A1A2E', marginBottom: 8 }}>Email envoyé !</h3>
+                    <p style={{ fontSize: 14, color: '#9B9BB4', lineHeight: 1.6, marginBottom: 20 }}>
+                      Vérifiez votre boîte mail à <strong>{forgotEmail}</strong>. Le lien est valable 1 heure.
+                    </p>
+                    <button onClick={() => { setShowForgot(false); setForgotSent(false); setForgotEmail(''); }} style={{ background: 'linear-gradient(135deg, #C0392B, #E74C3C)', color: 'white', border: 'none', borderRadius: 10, padding: '12px 24px', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'Outfit, sans-serif' }}>
+                      Fermer
+                    </button>
+                  </div>
+                </>}
               </div>
             </div>
           )}
@@ -176,7 +203,6 @@ export default function Login() {
             {mode === 'connexion' ? 'Connectez-vous à votre espace restaurateur' : 'Démarrez votre programme de fidélité'}
           </p>
 
-          {/* Toggle */}
           <div style={{ display: 'flex', background: 'white', borderRadius: '12px', padding: '4px', marginBottom: '28px', border: '1px solid #EAEAF0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
             {['connexion', 'inscription'].map(m => (
               <button key={m} onClick={() => { setMode(m); setErreurs({}); }} style={{
@@ -195,7 +221,6 @@ export default function Login() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
             {mode === 'inscription' && <>
-              {/* Nom */}
               <div>
                 <input placeholder="Nom du restaurant" value={form.nom} onChange={e => setForm({...form, nom: e.target.value})} onKeyDown={handleKeyDown}
                   style={{ width: '100%', padding: '13px 16px', borderRadius: '11px', border: `1.5px solid ${erreurs.nom ? '#E74C3C' : '#EAEAF0'}`, fontSize: '14px', outline: 'none', background: 'white', color: '#1A1A2E', fontFamily: 'Outfit, sans-serif' }}
@@ -205,23 +230,21 @@ export default function Login() {
                 {erreurs.nom && <p style={{ fontSize: 12, color: '#E74C3C', marginTop: 4, fontWeight: 600 }}>{erreurs.nom}</p>}
               </div>
 
-              {/* Adresse */}
               <input placeholder="Adresse complète" value={form.adresse} onChange={e => setForm({...form, adresse: e.target.value})} onKeyDown={handleKeyDown}
                 style={{ width: '100%', padding: '13px 16px', borderRadius: '11px', border: '1.5px solid #EAEAF0', fontSize: '14px', outline: 'none', background: 'white', color: '#1A1A2E', fontFamily: 'Outfit, sans-serif' }}
                 onFocus={e => e.target.style.borderColor = '#C0392B'}
                 onBlur={e => e.target.style.borderColor = '#EAEAF0'}
               />
 
-              {/* Téléphone avec indicatif */}
               <div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <select value={form.indicatif} onChange={e => setForm({...form, indicatif: e.target.value})}
-                    style={{ width: '130px', padding: '13px 10px', borderRadius: '11px', border: '1.5px solid #EAEAF0', fontSize: '13px', outline: 'none', background: 'white', color: '#1A1A2E', fontFamily: 'Outfit, sans-serif', cursor: 'pointer', flexShrink: 0 }}>
+                    style={{ width: '140px', padding: '13px 10px', borderRadius: '11px', border: '1.5px solid #EAEAF0', fontSize: '13px', outline: 'none', background: 'white', color: '#1A1A2E', fontFamily: 'Outfit, sans-serif', cursor: 'pointer', flexShrink: 0 }}>
                     {INDICATIFS.map(i => (
-                      <option key={i.code} value={i.code}>{i.code} {i.pays}</option>
+                      <option key={i.code} value={i.code}>{i.code} — {i.pays}</option>
                     ))}
                   </select>
-                  <input placeholder="Numéro de téléphone" value={form.telephone} onChange={e => setForm({...form, telephone: e.target.value.replace(/[^0-9]/g, '')})} onKeyDown={handleKeyDown}
+                  <input placeholder="Numéro" value={form.telephone} onChange={e => setForm({...form, telephone: e.target.value.replace(/[^0-9]/g, '')})} onKeyDown={handleKeyDown}
                     style={{ flex: 1, padding: '13px 16px', borderRadius: '11px', border: `1.5px solid ${erreurs.telephone ? '#E74C3C' : '#EAEAF0'}`, fontSize: '14px', outline: 'none', background: 'white', color: '#1A1A2E', fontFamily: 'Outfit, sans-serif' }}
                     onFocus={e => e.target.style.borderColor = '#C0392B'}
                     onBlur={e => e.target.style.borderColor = erreurs.telephone ? '#E74C3C' : '#EAEAF0'}
@@ -231,7 +254,6 @@ export default function Login() {
               </div>
             </>}
 
-            {/* Email */}
             <div>
               <input placeholder="Adresse email" type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} onKeyDown={handleKeyDown}
                 style={{ width: '100%', padding: '13px 16px', borderRadius: '11px', border: `1.5px solid ${erreurs.email ? '#E74C3C' : '#EAEAF0'}`, fontSize: '14px', outline: 'none', background: 'white', color: '#1A1A2E', fontFamily: 'Outfit, sans-serif' }}
@@ -241,32 +263,30 @@ export default function Login() {
               {erreurs.email && <p style={{ fontSize: 12, color: '#E74C3C', marginTop: 4, fontWeight: 600 }}>{erreurs.email}</p>}
             </div>
 
-            {/* Mot de passe */}
             <div>
               <div style={{ position: 'relative' }}>
-                <input
-                  placeholder="Mot de passe" type={showMdp ? 'text' : 'password'}
+                <input placeholder="Mot de passe" type={showMdp ? 'text' : 'password'}
                   value={form.mot_de_passe} onChange={e => setForm({...form, mot_de_passe: e.target.value})}
                   onKeyDown={handleKeyDown}
                   style={{ width: '100%', padding: '13px 46px 13px 16px', borderRadius: '11px', border: `1.5px solid ${erreurs.mot_de_passe ? '#E74C3C' : '#EAEAF0'}`, fontSize: '14px', outline: 'none', background: 'white', color: '#1A1A2E', fontFamily: 'Outfit, sans-serif' }}
                   onFocus={e => e.target.style.borderColor = '#C0392B'}
                   onBlur={e => e.target.style.borderColor = erreurs.mot_de_passe ? '#E74C3C' : '#EAEAF0'}
                 />
-                <button onClick={() => setShowMdp(!showMdp)} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#9B9BB4', padding: 0, lineHeight: 1 }}>
+                <button onClick={() => setShowMdp(!showMdp)} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#9B9BB4', padding: 0, lineHeight: 1 }}>
                   {showMdp ? '🙈' : '👁️'}
                 </button>
               </div>
 
-              {/* Critères mot de passe (inscription uniquement) */}
-              {mode === 'inscription' && form.mot_de_passe.length > 0 && (
+              {/* Critères en rouge/vert */}
+              {mode === 'inscription' && mdpTouche && (
                 <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {[
                     { ok: mdpCheck.longueur, label: '8 caractères minimum' },
-                    { ok: mdpCheck.majuscule, label: 'Une majuscule' },
+                    { ok: mdpCheck.majuscule, label: 'Une lettre majuscule' },
                     { ok: mdpCheck.chiffre, label: 'Un chiffre' },
                   ].map(({ ok, label }) => (
-                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: ok ? '#059669' : '#9B9BB4', fontWeight: 600 }}>
-                      <span>{ok ? '✓' : '○'}</span> {label}
+                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: ok ? '#059669' : '#E74C3C', fontWeight: 600, transition: 'color 0.2s' }}>
+                      <span style={{ fontSize: 14 }}>{ok ? '✓' : '✕'}</span> {label}
                     </div>
                   ))}
                 </div>
@@ -274,7 +294,6 @@ export default function Login() {
               {erreurs.mot_de_passe && <p style={{ fontSize: 12, color: '#E74C3C', marginTop: 4, fontWeight: 600 }}>{erreurs.mot_de_passe}</p>}
             </div>
 
-            {/* Mot de passe oublié */}
             {mode === 'connexion' && (
               <button onClick={() => setShowForgot(true)} style={{ background: 'none', border: 'none', color: '#C0392B', fontSize: 13, fontWeight: 700, cursor: 'pointer', textAlign: 'right', fontFamily: 'Outfit, sans-serif', padding: 0, marginTop: -4 }}>
                 Mot de passe oublié ?
@@ -282,13 +301,10 @@ export default function Login() {
             )}
 
             <button onClick={handleSubmit} disabled={loading} style={{
-              marginTop: '4px',
-              background: loading ? '#ccc' : 'linear-gradient(135deg, #C0392B, #E74C3C)',
-              color: 'white', border: 'none', borderRadius: '12px',
-              padding: '15px', fontSize: '15px', fontWeight: '700',
-              boxShadow: loading ? 'none' : '0 8px 24px rgba(192,57,43,0.35)',
-              transition: 'all 0.3s ease', fontFamily: 'Outfit, sans-serif',
-              cursor: loading ? 'not-allowed' : 'pointer', width: '100%',
+              marginTop: '4px', background: loading ? '#ccc' : 'linear-gradient(135deg, #C0392B, #E74C3C)',
+              color: 'white', border: 'none', borderRadius: '12px', padding: '15px', fontSize: '15px', fontWeight: '700',
+              boxShadow: loading ? 'none' : '0 8px 24px rgba(192,57,43,0.35)', transition: 'all 0.3s ease',
+              fontFamily: 'Outfit, sans-serif', cursor: loading ? 'not-allowed' : 'pointer', width: '100%',
             }}
             onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = 'translateY(-2px)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}>
