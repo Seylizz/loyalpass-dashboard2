@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import API from '../api/axios';
+import API from '../api';
 
 const COULEURS = [
   '#B5281C', '#1A56DB', '#047857', '#7C3AED',
