@@ -18,11 +18,11 @@ export default function Login() {
       localStorage.setItem('restaurant', JSON.stringify(data.restaurant));
       // Si c'est une inscription, supprimer onboarding_done pour afficher le wizard
       if (mode === 'inscription') {
+      // Nouvelle inscription → afficher le wizard
         localStorage.removeItem('onboarding_done');
-      }
-      // Si c'est une connexion et que onboarding est déjà complet en DB, marquer comme done
-      if (mode === 'connexion' && data.restaurant?.onboarding_complete) {
-        localStorage.setItem('onboarding_done', 'true');
+      } else {
+        // Connexion → ne jamais afficher le wizard
+          localStorage.setItem('onboarding_done', 'true');
       }
       toast.success(mode === 'connexion' ? 'Connexion réussie !' : 'Compte créé !');
       navigate('/dashboard');
