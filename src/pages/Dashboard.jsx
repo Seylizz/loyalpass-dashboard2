@@ -16,6 +16,7 @@ const IconScan = () => <svg width="20" height="20" fill="none" stroke="currentCo
 const IconQr = () => <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>;
 const IconArrow = () => <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>;
 const IconActivity = () => <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>;
+const IconHeart = () => <svg width="22" height="22" fill="none" stroke="rgba(255,255,255,0.9)" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>;
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -44,20 +45,12 @@ export default function Dashboard() {
     try {
       const { data } = await API.get('/restaurants/stats');
       setStats(data.stats);
-      // Activité récente depuis les top clients (dernières transactions simulées)
       if (data.stats?.top_clients?.length) {
-        setActivite(data.stats.top_clients.slice(0, 4).map(c => ({
-          prenom: c.prenom,
-          points: c.points,
-          visites: c.visites,
-        })));
+        setActivite(data.stats.top_clients.slice(0, 4).map(c => ({ prenom: c.prenom, points: c.points, visites: c.visites })));
       }
     } catch { toast.error('Erreur chargement stats'); }
     setLoading(false);
   };
-
-  const couleur = restaurant.couleur || C.primary;
-  const emoji = restaurant.logo_emoji || '🥙';
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'Lato, sans-serif' }}>
@@ -77,12 +70,14 @@ export default function Dashboard() {
       )}
 
       {/* HERO */}
-      <div style={{ background: `linear-gradient(135deg, #2A1610 0%, #3D1F17 60%, #2A1610 100%)`, padding: '36px 32px 80px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: 'linear-gradient(135deg, #2A1610 0%, #3D1F17 60%, #2A1610 100%)', padding: '36px 32px 80px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -60, right: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(181,40,28,0.15)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: -40, left: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(217,119,6,0.1)', pointerEvents: 'none' }} />
         <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 24 }}>
-            <div style={{ width: 60, height: 60, borderRadius: 18, background: couleur, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, boxShadow: `0 8px 24px ${couleur}55`, flexShrink: 0 }}>{emoji}</div>
+            <div style={{ width: 60, height: 60, borderRadius: 18, background: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 8px 24px rgba(181,40,28,0.4)`, flexShrink: 0 }}>
+              <IconHeart />
+            </div>
             <div>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 4 }}>Tableau de bord</div>
               <h1 style={{ fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 900, color: '#fff', letterSpacing: '-0.8px', lineHeight: 1.1 }}>Bonjour, {restaurant.nom}</h1>
@@ -166,13 +161,18 @@ export default function Dashboard() {
               {/* Colonne droite */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-                {/* Bannière programme */}
-                <div style={{ background: `linear-gradient(135deg, ${couleur}, ${couleur}CC)`, borderRadius: 20, padding: '20px', boxShadow: `0 15px 40px -15px ${couleur}55`, animation: 'fadeUp 0.5s ease 0.2s both', position: 'relative', overflow: 'hidden' }}>
-                  <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>{emoji}</div>
+                {/* Bannière programme — couleur fixe #B5281C */}
+                <div style={{ background: 'linear-gradient(135deg, #B5281C, #96281B)', borderRadius: 20, padding: '20px', boxShadow: '0 15px 40px -15px rgba(181,40,28,0.4)', animation: 'fadeUp 0.5s ease 0.2s both', position: 'relative', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+                  <div style={{ position: 'absolute', bottom: -30, left: -10, width: 80, height: 80, borderRadius: '50%', background: 'rgba(217,119,6,0.15)' }} />
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+                    <svg width="20" height="20" fill="none" stroke="white" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </div>
                   <div style={{ fontSize: 13, fontWeight: 900, color: '#fff', marginBottom: 2 }}>{restaurant.nom}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginBottom: 14 }}>Programme de fidélité actif</div>
-                  <button onClick={() => navigate('/programme')} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', color: '#fff', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Lato, sans-serif' }}>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 14 }}>Programme de fidélité actif</div>
+                  <button onClick={() => navigate('/programme')} style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Lato, sans-serif', transition: 'all 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}>
                     Gérer le programme →
                   </button>
                 </div>
