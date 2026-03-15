@@ -6,7 +6,7 @@ import API from '../api';
 import toast, { Toaster } from 'react-hot-toast';
 import Onboarding from './Onboarding';
 
-const C = { bg: '#FCFBF8', text: '#2A1610', primary: '#B5281C', border: '#E8E1D5', gray: '#9B8E84' };
+const C = { bg: '#FCFBF8', text: '#2A1610', primary: '#B5281C', amber: '#D97706', border: '#E8E1D5', gray: '#9B8E84' };
 
 const IconUsers = () => <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>;
 const IconCalendar = () => <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>;
@@ -15,6 +15,7 @@ const IconGift = () => <svg width="20" height="20" fill="none" stroke="currentCo
 const IconScan = () => <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9V5a2 2 0 012-2h4M3 15v4a2 2 0 002 2h4m10-16h-4a2 2 0 00-2 2v4m6 10h-4a2 2 0 01-2-2v-4"/></svg>;
 const IconQr = () => <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>;
 const IconArrow = () => <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>;
+const IconTrend = () => <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>;
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -46,6 +47,9 @@ export default function Dashboard() {
     setLoading(false);
   };
 
+  const couleur = restaurant.couleur || C.primary;
+  const emoji = restaurant.logo_emoji || '🥙';
+
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'Lato, sans-serif' }}>
       <Toaster position="top-right" />
@@ -59,66 +63,106 @@ export default function Dashboard() {
           const updated = { ...restaurant, ...updates, onboarding_complete: true };
           setRestaurant(updated);
           localStorage.setItem('restaurant', JSON.stringify(updated));
-          toast.success('Programme configuré ! 🎉');
+          toast.success('Programme configuré !');
         }} />
       )}
 
-      <div className="page-content" style={{ maxWidth: 1100, margin: '0 auto', padding: '36px 32px' }}>
+      {/* HERO HEADER */}
+      <div style={{
+        background: `linear-gradient(135deg, #2A1610 0%, #3D1F17 60%, #2A1610 100%)`,
+        padding: '36px 32px 80px',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        {/* Blobs décoratifs */}
+        <div style={{ position: 'absolute', top: -60, right: -60, width: 300, height: 300, borderRadius: '50%', background: `rgba(181,40,28,0.15)`, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -40, left: -40, width: 200, height: 200, borderRadius: '50%', background: `rgba(217,119,6,0.1)`, pointerEvents: 'none' }} />
 
-        {/* Header */}
-        <div style={{ marginBottom: 32, animation: 'fadeUp 0.5s ease' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: C.primary, marginBottom: 8 }}>Vue d'ensemble</div>
-          <h1 className="h1-title" style={{ fontSize: 30, fontWeight: 900, color: C.text, letterSpacing: '-0.8px', marginBottom: 4 }}>
-            Bonjour, {restaurant.nom}
-          </h1>
-          <p style={{ color: C.gray, fontSize: 15 }}>Performances de votre programme de fidélité</p>
+        <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 24 }}>
+            <div style={{ width: 60, height: 60, borderRadius: 18, background: couleur, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, boxShadow: `0 8px 24px ${couleur}55`, flexShrink: 0 }}>
+              {emoji}
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 4 }}>Tableau de bord</div>
+              <h1 style={{ fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 900, color: '#fff', letterSpacing: '-0.8px', lineHeight: 1.1 }}>
+                Bonjour, {restaurant.nom}
+              </h1>
+            </div>
+          </div>
+
+          {/* Bandeau stats rapides */}
+          {!loading && stats && (
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {[
+                { label: 'clients fidèles', val: stats.total_clients || 0, color: '#fff' },
+                { label: 'actifs ce mois', val: stats.clients_ce_mois || 0, color: `rgba(217,119,6,0.9)` },
+                { label: 'points distribués', val: (stats.points_distribues || 0).toLocaleString(), color: 'rgba(255,255,255,0.7)' },
+              ].map(({ label, val, color }) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 100, padding: '6px 14px' }}>
+                  <span style={{ fontSize: 16, fontWeight: 900, color }}>{val}</span>
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>{label}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* CONTENU — chevauchement sur le hero */}
+      <div className="page-content" style={{ maxWidth: 1100, margin: '-44px auto 0', padding: '0 32px 48px', position: 'relative', zIndex: 10 }}>
 
         {loading ? (
-          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 28 }}>
-            {[0,1,2,3].map(i => <div key={i} style={{ height: 130, background: '#fff', borderRadius: 20, border: `1px solid ${C.border}`, animation: 'pulse 1.5s ease infinite' }} />)}
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
+            {[0,1,2,3].map(i => <div key={i} style={{ height: 130, background: '#fff', borderRadius: 20, border: `1px solid ${C.border}`, animation: 'pulse 1.5s ease infinite', boxShadow: '0 15px 40px -15px rgba(181,40,28,0.1)' }} />)}
           </div>
         ) : (
           <>
-            <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 28 }}>
+            {/* Stats cards */}
+            <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
               <StatCard icon={<IconUsers/>} label="Total clients" value={stats?.total_clients||0} couleur="rgba(181,40,28,0.08)" delay={0}/>
               <StatCard icon={<IconCalendar/>} label="Actifs ce mois" value={stats?.clients_ce_mois||0} couleur="rgba(5,150,105,0.08)" delay={0.1}/>
               <StatCard icon={<IconStar/>} label="Points distribués" value={stats?.points_distribues||0} couleur="rgba(217,119,6,0.08)" delay={0.2}/>
               <StatCard icon={<IconGift/>} label="Récompenses" value={stats?.recompenses_utilisees||0} couleur="rgba(41,128,185,0.08)" delay={0.3}/>
             </div>
 
+            {/* Grille principale */}
             <div className="main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20 }}>
+
               {/* Top clients */}
-              <div style={{ background: '#fff', borderRadius: 20, border: `1px solid ${C.border}`, overflow: 'hidden', boxShadow: '0 2px 8px rgba(42,22,16,0.04)', animation: 'fadeUp 0.5s ease 0.3s both' }}>
+              <div style={{ background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, overflow: 'hidden', boxShadow: '0 15px 40px -15px rgba(181,40,28,0.1)', animation: 'fadeUp 0.5s ease 0.3s both' }}>
                 <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div style={{ fontSize: 15, fontWeight: 900, color: C.text }}>Top clients</div>
                     <div style={{ fontSize: 12, color: C.gray, marginTop: 2 }}>Classés par points</div>
                   </div>
-                  <button onClick={() => navigate('/clients')} style={{ background: '#F3F0EA', border: `1px solid ${C.border}`, color: C.text, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, fontFamily: 'Lato, sans-serif', cursor: 'pointer', transition: 'all 0.2s' }}
+                  <button onClick={() => navigate('/clients')} style={{ background: '#F3F0EA', border: `1px solid ${C.border}`, color: C.text, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, fontFamily: 'Lato, sans-serif', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(181,40,28,0.08)'; e.currentTarget.style.color = C.primary; }}
                   onMouseLeave={e => { e.currentTarget.style.background = '#F3F0EA'; e.currentTarget.style.color = C.text; }}>
-                    Voir tous →
+                    Voir tous <IconArrow/>
                   </button>
                 </div>
+
                 {!stats?.top_clients?.length ? (
                   <div style={{ padding: '60px', textAlign: 'center' }}>
-                    <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#F3F0EA', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', color: C.gray }}><IconUsers/></div>
-                    <div style={{ fontWeight: 900, color: C.text, marginBottom: 4 }}>Aucun client encore</div>
+                    <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#F3F0EA', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', color: C.gray }}><IconUsers/></div>
+                    <div style={{ fontWeight: 900, color: C.text, marginBottom: 6, fontSize: 16 }}>Aucun client encore</div>
                     <div style={{ fontSize: 13, color: C.gray }}>Partagez votre QR code pour commencer</div>
+                    <button onClick={() => navigate('/qrcode')} style={{ marginTop: 18, background: C.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Lato, sans-serif', boxShadow: '0 4px 12px rgba(181,40,28,0.3)' }}>
+                      Voir mon QR Code →
+                    </button>
                   </div>
                 ) : (
                   stats.top_clients.map((c, i) => (
-                    <div key={i} style={{ padding: '14px 24px', borderBottom: i < stats.top_clients.length-1 ? `1px solid #F3F0EA` : 'none', display: 'flex', alignItems: 'center', gap: 12, transition: 'background 0.2s', animation: `fadeUp 0.4s ease ${0.4+i*0.08}s both` }}
+                    <div key={i} style={{ padding: '14px 24px', borderBottom: i < stats.top_clients.length-1 ? `1px solid #F3F0EA` : 'none', display: 'flex', alignItems: 'center', gap: 14, transition: 'background 0.2s' }}
                     onMouseEnter={e => e.currentTarget.style.background = '#FAFAF8'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                      <div style={{ width: 30, height: 30, borderRadius: 8, background: i===0?'linear-gradient(135deg,#D97706,#B45309)':i===1?'linear-gradient(135deg,#9B8E84,#7A6E66)':i===2?'linear-gradient(135deg,#B5281C,#96281B)':'#F3F0EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: i<3?'white':C.gray, flexShrink: 0 }}>{i+1}</div>
+                      <div style={{ width: 32, height: 32, borderRadius: 10, background: i===0 ? `linear-gradient(135deg,${C.amber},#B45309)` : i===1 ? 'linear-gradient(135deg,#9B8E84,#7A6E66)' : i===2 ? `linear-gradient(135deg,${C.primary},#96281B)` : '#F3F0EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: i<3 ? 'white' : C.gray, flexShrink: 0 }}>{i+1}</div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 700, fontSize: 14, color: C.text }}>{c.prenom||'Anonyme'}</div>
                         <div style={{ fontSize: 12, color: C.gray }}>{c.visites} visites</div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 16, fontWeight: 900, color: C.primary }}>{c.points}</div>
+                        <div style={{ fontSize: 17, fontWeight: 900, color: C.primary }}>{c.points}</div>
                         <div style={{ fontSize: 11, color: C.gray }}>points</div>
                       </div>
                     </div>
@@ -126,21 +170,34 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {/* Actions rapides */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, animation: 'fadeUp 0.5s ease 0.4s both' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: C.gray, textTransform: 'uppercase', letterSpacing: 1 }}>Actions rapides</div>
+              {/* Colonne droite */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+                {/* Bannière programme */}
+                <div style={{ background: `linear-gradient(135deg, ${couleur}, ${couleur}CC)`, borderRadius: 20, padding: '20px 20px', boxShadow: `0 15px 40px -15px ${couleur}55`, animation: 'fadeUp 0.5s ease 0.2s both', position: 'relative', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>{emoji}</div>
+                  <div style={{ fontSize: 13, fontWeight: 900, color: '#fff', marginBottom: 2 }}>{restaurant.nom}</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginBottom: 14 }}>Programme de fidélité actif</div>
+                  <button onClick={() => navigate('/programme')} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', color: '#fff', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Lato, sans-serif' }}>
+                    Gérer le programme →
+                  </button>
+                </div>
+
+                {/* Actions rapides */}
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.gray, textTransform: 'uppercase', letterSpacing: 1, marginTop: 4 }}>Actions rapides</div>
                 {[
-                  { icon: <IconScan/>, label: 'Scanner un client', sub: 'Créditer des points', path: '/caisse', bg: 'rgba(181,40,28,0.06)', border: 'rgba(181,40,28,0.15)' },
-                  { icon: <IconQr/>, label: 'Mon QR Code', sub: "Page d'inscription clients", path: '/qrcode', bg: 'rgba(41,128,185,0.06)', border: 'rgba(41,128,185,0.15)' },
-                  { icon: <IconUsers/>, label: 'Mes clients', sub: `${stats?.total_clients||0} membres inscrits`, path: '/clients', bg: 'rgba(5,150,105,0.06)', border: 'rgba(5,150,105,0.15)' },
+                  { icon: <IconScan/>, label: 'Scanner un client', sub: 'Créditer des points', path: '/caisse', accent: C.primary },
+                  { icon: <IconQr/>, label: 'Mon QR Code', sub: "Page d'inscription", path: '/qrcode', accent: '#2980B9' },
+                  { icon: <IconUsers/>, label: 'Mes clients', sub: `${stats?.total_clients||0} membres`, path: '/clients', accent: '#059669' },
                 ].map((a, i) => (
-                  <button key={i} onClick={() => navigate(a.path)} style={{ background: '#fff', border: `1px solid ${a.border}`, borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'all 0.25s', textAlign: 'left', width: '100%', fontFamily: 'Lato, sans-serif', animation: `fadeUp 0.4s ease ${0.5+i*0.1}s both` }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(42,22,16,0.08)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                    <div style={{ width: 42, height: 42, borderRadius: 12, background: a.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.primary, flexShrink: 0 }}>{a.icon}</div>
+                  <button key={i} onClick={() => navigate(a.path)} style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'all 0.25s', textAlign: 'left', width: '100%', fontFamily: 'Lato, sans-serif', boxShadow: '0 2px 8px rgba(42,22,16,0.04)' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.boxShadow = `0 8px 24px rgba(42,22,16,0.08)`; e.currentTarget.style.borderColor = `${a.accent}44`; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(42,22,16,0.04)'; e.currentTarget.style.borderColor = C.border; }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 12, background: `${a.accent}12`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: a.accent, flexShrink: 0 }}>{a.icon}</div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: C.text }}>{a.label}</div>
-                      <div style={{ fontSize: 12, color: C.gray, marginTop: 2 }}>{a.sub}</div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: C.text }}>{a.label}</div>
+                      <div style={{ fontSize: 11, color: C.gray, marginTop: 1 }}>{a.sub}</div>
                     </div>
                     <div style={{ color: C.border }}><IconArrow/></div>
                   </button>
