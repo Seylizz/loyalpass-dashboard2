@@ -1,42 +1,57 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #FCFBF8;
+  --text: #2A1610;
+  --primary: #B5281C;
+  --amber: #D97706;
+  --border: #E8E1D5;
+  --white: #FFFFFF;
+  --gray: #9B8E84;
+  --gray-light: #F3F0EA;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+body {
+  font-family: 'Lato', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
-.card {
-  padding: 2em;
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
-.read-the-docs {
-  color: #888;
+/* Mobile bottom nav */
+.bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .top-nav-links { display: none !important; }
+  .bottom-nav { display: flex !important; }
+  .page-content { padding: 20px 16px 80px !important; }
+  .stats-grid { grid-template-columns: 1fr 1fr !important; }
+  .main-grid { grid-template-columns: 1fr !important; }
+  .plans-grid { grid-template-columns: 1fr !important; }
+  .actions-grid { grid-template-columns: 1fr 1fr !important; }
+  .header-row { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+  .search-input { width: 100% !important; }
+  .table-row { grid-template-columns: 1fr 1fr !important; }
+  .table-header { display: none !important; }
+  .hide-mobile { display: none !important; }
+  .h1-title { font-size: 24px !important; }
 }

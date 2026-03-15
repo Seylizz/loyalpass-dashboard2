@@ -1,163 +1,135 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
+const C = { bg: '#FCFBF8', text: '#2A1610', primary: '#B5281C', border: '#E8E1D5', gray: '#9B8E84' };
+
+const IconDash = () => <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>;
+const IconUsers = () => <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>;
+const IconQr = () => <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>;
+const IconScan = () => <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9V5a2 2 0 012-2h4M3 15v4a2 2 0 002 2h4m10-16h-4a2 2 0 00-2 2v4m6 10h-4a2 2 0 01-2-2v-4"/></svg>;
+const IconSettings = () => <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>;
+const IconCard = () => <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>;
+const IconLogout = () => <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>;
+const IconHeart = () => <svg width="16" height="16" fill="none" stroke="white" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>;
+
+const LIENS = [
+  { path: '/dashboard', icon: <IconDash />, label: 'Dashboard' },
+  { path: '/clients', icon: <IconUsers />, label: 'Clients' },
+  { path: '/caisse', icon: <IconScan />, label: 'Caisse' },
+  { path: '/qrcode', icon: <IconQr />, label: 'QR Code' },
+  { path: '/programme', icon: <IconSettings />, label: 'Programme' },
+  { path: '/abonnement', icon: <IconCard />, label: 'Abonnement' },
+];
+
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [restaurant, setRestaurant] = useState(JSON.parse(localStorage.getItem('restaurant') || '{}'));
-  const [scrolled, setScrolled] = useState(false);
 
-  // Recharger le restaurant quand localStorage change
   useEffect(() => {
     const sync = () => setRestaurant(JSON.parse(localStorage.getItem('restaurant') || '{}'));
     window.addEventListener('storage', sync);
-    // Aussi vérifier à chaque navigation
     sync();
     return () => window.removeEventListener('storage', sync);
   }, [location]);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  const logout = () => {
-    localStorage.clear();
-    navigate('/');
-  };
-
-  const couleur = restaurant.couleur || '#C0392B';
+  const logout = () => { localStorage.clear(); navigate('/'); };
+  const couleur = restaurant.couleur || C.primary;
   const emoji = restaurant.logo_emoji || '🥙';
 
-  const liens = [
-    { path: '/dashboard', icon: '▦', label: 'Dashboard' },
-    { path: '/clients', icon: '◎', label: 'Clients' },
-    { path: '/caisse', icon: '⊡', label: 'Caisse' },
-    { path: '/qrcode', icon: '⊞', label: 'QR Code' },
-    { path: '/programme', icon: '⚙', label: 'Programme' },
-    { path: '/abonnement', icon: '💳', label: 'Abonnement' },
-  ];
-
   return (
-    <nav style={{
-      background: scrolled ? 'rgba(26,26,46,0.97)' : '#1A1A2E',
-      backdropFilter: 'blur(20px)',
-      borderBottom: '1px solid rgba(255,255,255,0.06)',
-      padding: '0 32px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      height: '68px',
-      position: 'sticky',
-      top: 0,
-      zIndex: 1000,
-      transition: 'all 0.3s ease',
-      boxShadow: scrolled ? '0 4px 30px rgba(0,0,0,0.3)' : 'none',
-    }}>
-
-      {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            width: '36px', height: '36px',
-            background: couleur,
-            borderRadius: '10px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '18px',
-            boxShadow: `0 4px 12px ${couleur}66`,
-            transition: 'all 0.3s',
-          }}>{emoji}</div>
-          <div>
-            <div style={{ fontWeight: '800', fontSize: '16px', color: 'white', letterSpacing: '-0.3px' }}>
-              LoyalPass
+    <>
+      {/* TOP NAV — Desktop */}
+      <nav style={{
+        background: C.bg, borderBottom: `1px solid ${C.border}`,
+        padding: '0 32px', height: 68,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        position: 'sticky', top: 0, zIndex: 1000,
+        boxShadow: '0 2px 12px rgba(42,22,16,0.06)',
+      }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+          <div
+            onClick={() => navigate('/dashboard')}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+          >
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: couleur, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, boxShadow: `0 4px 12px ${couleur}55`, transition: 'all 0.3s' }}>
+              {emoji}
             </div>
-            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '500', letterSpacing: '1px', textTransform: 'uppercase' }}>
-              {restaurant.nom || 'Dashboard'}
+            <div>
+              <div style={{ fontWeight: 900, fontSize: 16, color: C.text, letterSpacing: '-0.3px' }}>LoyalPass</div>
+              <div style={{ fontSize: 10, color: C.gray, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>{restaurant.nom || 'Dashboard'}</div>
             </div>
           </div>
-        </div>
 
-        {/* Navigation */}
-        <div style={{ display: 'flex', gap: '2px' }}>
-          {liens.map((l, i) => {
-            const actif = location.pathname === l.path;
-            return (
-              <button key={l.path} onClick={() => navigate(l.path)} style={{
-                background: actif ? `${couleur}33` : 'transparent',
-                color: actif ? couleur : 'rgba(255,255,255,0.55)',
-                border: actif ? `1px solid ${couleur}55` : '1px solid transparent',
-                padding: '7px 16px',
-                borderRadius: '8px',
-                fontSize: '13.5px',
-                fontWeight: actif ? '700' : '500',
-                display: 'flex', alignItems: 'center', gap: '7px',
-                transition: 'all 0.2s ease',
-                cursor: 'pointer',
-                fontFamily: 'Outfit, sans-serif',
-                animation: `slideIn 0.4s ease ${i * 0.05}s both`,
-              }}
-              onMouseEnter={e => {
-                if (!actif) {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
-                  e.currentTarget.style.color = 'white';
-                }
-              }}
-              onMouseLeave={e => {
-                if (!actif) {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.55)';
-                }
-              }}>
-                <span style={{ fontSize: '15px' }}>{l.icon}</span>
-                {l.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Droite */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{
-          background: 'rgba(255,255,255,0.06)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: '10px',
-          padding: '7px 14px',
-          display: 'flex', alignItems: 'center', gap: '8px',
-        }}>
-          <div style={{
-            width: '28px', height: '28px',
-            background: couleur,
-            borderRadius: '8px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '13px', fontWeight: '700', color: 'white'
-          }}>
-            {restaurant.nom?.[0] || 'R'}
-          </div>
-          <div>
-            <div style={{ fontSize: '12px', fontWeight: '600', color: 'white' }}>{restaurant.nom || 'Restaurant'}</div>
-            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>{restaurant.email || ''}</div>
+          {/* Nav links — desktop only */}
+          <div className="top-nav-links" style={{ display: 'flex', gap: 2 }}>
+            {LIENS.map((l, i) => {
+              const actif = location.pathname === l.path;
+              return (
+                <button key={l.path} onClick={() => navigate(l.path)} style={{
+                  background: actif ? `rgba(181,40,28,0.08)` : 'transparent',
+                  color: actif ? C.primary : C.gray,
+                  border: actif ? `1px solid rgba(181,40,28,0.2)` : '1px solid transparent',
+                  padding: '7px 14px', borderRadius: 8,
+                  fontSize: 13, fontWeight: actif ? 700 : 600,
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  transition: 'all 0.2s', cursor: 'pointer',
+                  fontFamily: 'Lato, sans-serif',
+                }}
+                onMouseEnter={e => { if (!actif) { e.currentTarget.style.background = C.gray + '12'; e.currentTarget.style.color = C.text; } }}
+                onMouseLeave={e => { if (!actif) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.gray; } }}>
+                  {l.icon} {l.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <button onClick={logout} style={{
-          background: 'transparent',
-          color: 'rgba(255,255,255,0.4)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          padding: '8px 14px',
-          borderRadius: '8px',
-          fontSize: '12px',
-          fontWeight: '600',
-          transition: 'all 0.2s',
-          fontFamily: 'Outfit, sans-serif',
-          cursor: 'pointer',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.color = '#E74C3C'; e.currentTarget.style.borderColor = 'rgba(192,57,43,0.4)'; }}
-        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}>
-          Déconnexion
-        </button>
+        {/* Right */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ background: C.gray + '10', border: `1px solid ${C.border}`, borderRadius: 10, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: couleur, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 12, color: '#fff' }}>
+              {restaurant.nom?.[0] || 'R'}
+            </div>
+            <div className="hide-mobile">
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{restaurant.nom || 'Restaurant'}</div>
+              <div style={{ fontSize: 10, color: C.gray }}>{restaurant.email || ''}</div>
+            </div>
+          </div>
+          <button onClick={logout} style={{ background: 'transparent', color: C.gray, border: `1px solid ${C.border}`, padding: '8px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700, transition: 'all 0.2s', fontFamily: 'Lato, sans-serif', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+          onMouseEnter={e => { e.currentTarget.style.color = C.primary; e.currentTarget.style.borderColor = C.primary + '55'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = C.gray; e.currentTarget.style.borderColor = C.border; }}>
+            <IconLogout /> <span className="hide-mobile">Déconnexion</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* BOTTOM NAV — Mobile */}
+      <div className="bottom-nav" style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000,
+        background: C.bg, borderTop: `1px solid ${C.border}`,
+        display: 'none', justifyContent: 'space-around', alignItems: 'center',
+        padding: '8px 0 12px',
+        boxShadow: '0 -4px 20px rgba(42,22,16,0.08)',
+      }}>
+        {LIENS.map(l => {
+          const actif = location.pathname === l.path;
+          return (
+            <button key={l.path} onClick={() => navigate(l.path)} style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+              color: actif ? C.primary : C.gray,
+              fontFamily: 'Lato, sans-serif', padding: '4px 8px',
+              borderRadius: 10,
+              background: actif ? `rgba(181,40,28,0.08)` : 'transparent',
+            }}>
+              {l.icon}
+              <span style={{ fontSize: 10, fontWeight: actif ? 700 : 600 }}>{l.label}</span>
+            </button>
+          );
+        })}
       </div>
-    </nav>
+    </>
   );
 }
