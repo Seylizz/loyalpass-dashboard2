@@ -4,8 +4,17 @@ import { useState, useEffect } from 'react';
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const restaurant = JSON.parse(localStorage.getItem('restaurant') || '{}');
+  const [restaurant, setRestaurant] = useState(JSON.parse(localStorage.getItem('restaurant') || '{}'));
   const [scrolled, setScrolled] = useState(false);
+
+  // Recharger le restaurant quand localStorage change
+  useEffect(() => {
+    const sync = () => setRestaurant(JSON.parse(localStorage.getItem('restaurant') || '{}'));
+    window.addEventListener('storage', sync);
+    // Aussi vérifier à chaque navigation
+    sync();
+    return () => window.removeEventListener('storage', sync);
+  }, [location]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -18,14 +27,17 @@ export default function Navbar() {
     navigate('/');
   };
 
+  const couleur = restaurant.couleur || '#C0392B';
+  const emoji = restaurant.logo_emoji || '🥙';
+
   const liens = [
-  { path: '/dashboard', icon: '▦', label: 'Dashboard' },
-  { path: '/clients', icon: '◎', label: 'Clients' },
-  { path: '/caisse', icon: '⊡', label: 'Caisse' },
-  { path: '/qrcode', icon: '⊞', label: 'QR Code' },
-  { path: '/abonnement', icon: '💳', label: 'Abonnement' },
+    { path: '/dashboard', icon: '▦', label: 'Dashboard' },
+    { path: '/clients', icon: '◎', label: 'Clients' },
+    { path: '/caisse', icon: '⊡', label: 'Caisse' },
+    { path: '/qrcode', icon: '⊞', label: 'QR Code' },
+    { path: '/programme', icon: '⚙', label: 'Programme' },
+    { path: '/abonnement', icon: '💳', label: 'Abonnement' },
   ];
-  ;
 
   return (
     <nav style={{
@@ -49,12 +61,13 @@ export default function Navbar() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
             width: '36px', height: '36px',
-            background: 'linear-gradient(135deg, #C0392B, #E74C3C)',
+            background: couleur,
             borderRadius: '10px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '18px',
-            boxShadow: '0 4px 12px rgba(192,57,43,0.4)'
-          }}>🥙</div>
+            boxShadow: `0 4px 12px ${couleur}66`,
+            transition: 'all 0.3s',
+          }}>{emoji}</div>
           <div>
             <div style={{ fontWeight: '800', fontSize: '16px', color: 'white', letterSpacing: '-0.3px' }}>
               LoyalPass
@@ -71,9 +84,9 @@ export default function Navbar() {
             const actif = location.pathname === l.path;
             return (
               <button key={l.path} onClick={() => navigate(l.path)} style={{
-                background: actif ? 'rgba(192,57,43,0.2)' : 'transparent',
-                color: actif ? '#E74C3C' : 'rgba(255,255,255,0.55)',
-                border: actif ? '1px solid rgba(192,57,43,0.3)' : '1px solid transparent',
+                background: actif ? `${couleur}33` : 'transparent',
+                color: actif ? couleur : 'rgba(255,255,255,0.55)',
+                border: actif ? `1px solid ${couleur}55` : '1px solid transparent',
                 padding: '7px 16px',
                 borderRadius: '8px',
                 fontSize: '13.5px',
@@ -115,7 +128,7 @@ export default function Navbar() {
         }}>
           <div style={{
             width: '28px', height: '28px',
-            background: 'linear-gradient(135deg, #C0392B, #E74C3C)',
+            background: couleur,
             borderRadius: '8px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '13px', fontWeight: '700', color: 'white'
@@ -138,6 +151,7 @@ export default function Navbar() {
           fontWeight: '600',
           transition: 'all 0.2s',
           fontFamily: 'Outfit, sans-serif',
+          cursor: 'pointer',
         }}
         onMouseEnter={e => { e.currentTarget.style.color = '#E74C3C'; e.currentTarget.style.borderColor = 'rgba(192,57,43,0.4)'; }}
         onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}>
