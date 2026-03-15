@@ -70,7 +70,7 @@ export default function Clients() {
             </div>
 
             {filtres.map((c, i) => (
-              <div key={c.id} style={{ padding: '14px 24px', borderBottom: i < filtres.length-1 ? `1px solid #F3F0EA` : 'none', transition: 'background 0.2s', animation: `fadeUp 0.4s ease ${0.1+i*0.04}s both' }}
+              <div key={c.id} style={{ padding: '14px 24px', borderBottom: i < filtres.length-1 ? `1px solid #F3F0EA` : 'none', transition: 'background 0.2s', animation: `fadeUp 0.4s ease ${0.1+i*0.04}s both` }}
               onMouseEnter={e => e.currentTarget.style.background = '#FAFAF8'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
 
