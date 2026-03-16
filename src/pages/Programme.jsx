@@ -114,7 +114,7 @@ export default function Programme() {
   const conseils = genererConseils(form, stats);
   const conseilStyles = {
     success: { bg: 'rgba(5,150,105,0.06)', border: 'rgba(5,150,105,0.2)', icon: <IconCheck/>, titleColor: '#065F46' },
-    warning: { bg: 'rgba(217,119,6,0.06)', border: 'rgba(217,119,6,0.25)', icon: <IconWarn/>, titleColor: '#92400E' },
+    warning: { bg: 'rgba(217,119,6,0.12)', border: '#D97706', icon: <IconWarn/>, titleColor: '#92400E', bold: true },
     info: { bg: 'rgba(41,128,185,0.06)', border: 'rgba(41,128,185,0.2)', icon: <IconInfo/>, titleColor: '#1E3A5F' },
   };
 
@@ -155,9 +155,10 @@ export default function Programme() {
                   {conseils.map((c, i) => {
                     const s = conseilStyles[c.type];
                     return (
-                      <div key={i} style={{ background: s.bg, border: `1px solid ${s.border}`, borderRadius: 12, padding: '12px 14px' }}>
+                      <div key={i} style={{ background: s.bg, border: `${s.bold ? '2px' : '1px'} solid ${s.border}`, borderRadius: 12, padding: '12px 14px', boxShadow: s.bold ? '0 4px 12px rgba(217,119,6,0.15)' : 'none' }}>
+                        {s.bold && <div style={{ fontSize: 10, fontWeight: 900, color: '#D97706', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>⚠️ Point important</div>}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>{s.icon}<span style={{ fontSize: 12, fontWeight: 900, color: s.titleColor }}>{c.titre}</span></div>
-                        <p style={{ fontSize: 12, color: C.text, lineHeight: 1.6, margin: 0, opacity: 0.75 }}>{c.texte}</p>
+                        <p style={{ fontSize: 12, color: C.text, lineHeight: 1.6, margin: 0, opacity: s.bold ? 1 : 0.75 }}>{c.texte}</p>
                       </div>
                     );
                   })}
