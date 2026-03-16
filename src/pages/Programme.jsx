@@ -137,7 +137,7 @@ export default function Programme() {
       </div>
 
       <div className="page-content" style={{ maxWidth: 1000, margin: '-44px auto 0', padding: '0 32px 48px', position: 'relative', zIndex: 10 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
 
           {/* Colonne gauche */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -190,7 +190,7 @@ export default function Programme() {
               )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 8, marginBottom: 14 }}>
               {RECOMPENSES_EXEMPLES.map((r, i) => {
                 const sel = form.recompenses_selectionnees.find(x => x.label === r.label);
                 return (
