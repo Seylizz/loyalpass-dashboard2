@@ -21,7 +21,7 @@ export default function QRCode() {
       const { data } = await API.get('/qrcode/inscription');
       setQrCode(data.qr_code);
       setUrlInscription(data.url_inscription);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       setImprimerUrl(`https://loyalpass-backend-production.up.railway.app/api/qrcode/imprimer?token=${token}`);
     } catch { toast.error('Erreur chargement QR code'); }
     setLoading(false);
