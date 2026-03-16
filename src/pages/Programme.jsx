@@ -17,45 +17,34 @@ const RECOMPENSES_EXEMPLES = [
 const genererConseils = (form, stats) => {
   const conseils = [];
   const triees = [...form.recompenses_selectionnees].sort((a, b) => a.seuil - b.seuil);
-  const totalClients = stats?.total_clients || 0;
   const ptsParEuro = form.pts_par_euro;
+  const totalClients = stats?.total_clients || 0;
 
   if (triees.length > 0) {
     const eurosNecessaires = Math.round(triees[0].seuil / ptsParEuro);
     if (eurosNecessaires > 80) {
       conseils.push({ type: 'warning', titre: 'Première récompense trop lointaine', texte: `Avec ${ptsParEuro} pts/€, vos clients doivent dépenser ${eurosNecessaires}€ pour leur première récompense. Envisagez un palier sous 50€.` });
     } else if (eurosNecessaires < 15) {
-      conseils.push({ type: 'success', titre: 'Première récompense très accessible', texte: `Votre premier palier est atteint dès ${eurosNecessaires}€ de dépenses. Très motivant pour les nouveaux clients !` });
+      conseils.push({ type: 'success', titre: 'Première récompense très accessible', texte: `Votre premier palier est atteint dès ${eurosNecessaires}€. Très motivant pour les nouveaux clients !` });
     } else {
-      conseils.push({ type: 'success', titre: 'Bon équilibre du premier palier', texte: `Votre première récompense est atteinte après ~${eurosNecessaires}€. C'est un bon équilibre pour fidéliser rapidement.` });
+      conseils.push({ type: 'success', titre: 'Bon équilibre du premier palier', texte: `Votre première récompense est atteinte après ~${eurosNecessaires}€. C'est un bon équilibre.` });
     }
   }
-
   if (triees.length === 1) {
     conseils.push({ type: 'warning', titre: 'Ajoutez plusieurs paliers', texte: "Avec un seul palier, vos clients n'ont plus de motivation après la première récompense. Ajoutez 2-3 paliers progressifs." });
   } else if (triees.length >= 3) {
-    conseils.push({ type: 'success', titre: 'Programme bien structuré', texte: `${triees.length} paliers créent une progression motivante. Vos clients ont toujours un objectif à atteindre.` });
+    conseils.push({ type: 'success', titre: 'Programme bien structuré', texte: `${triees.length} paliers créent une progression motivante.` });
   }
-
   if (ptsParEuro < 5) {
-    conseils.push({ type: 'warning', titre: 'Taux de points faible', texte: 'Moins de 5 pts/€ peut sembler peu généreux. Vos clients pourraient ne pas percevoir la valeur du programme.' });
+    conseils.push({ type: 'warning', titre: 'Taux de points faible', texte: 'Moins de 5 pts/€ peut sembler peu généreux pour vos clients.' });
   } else if (ptsParEuro > 30) {
-    conseils.push({ type: 'info', titre: 'Taux de points élevé', texte: 'Un taux élevé est très attractif mais assurez-vous que vos récompenses restent rentables pour votre restaurant.' });
+    conseils.push({ type: 'info', titre: 'Taux de points élevé', texte: 'Assurez-vous que vos récompenses restent rentables pour votre restaurant.' });
   }
-
-  if (triees.length >= 2) {
-    const ecarts = triees.slice(1).map((r, i) => r.seuil - triees[i].seuil);
-    if (ecarts.find(e => e > 500)) {
-      conseils.push({ type: 'warning', titre: 'Écart important entre deux paliers', texte: "Un écart de plus de 500 pts entre deux récompenses peut décourager vos clients. Pensez à ajouter un palier intermédiaire." });
-    }
-  }
-
   if (totalClients > 10 && triees.length > 0) {
     const seuilMoyen = triees.reduce((s, r) => s + r.seuil, 0) / triees.length;
     const visitesNecessaires = Math.round(seuilMoyen / (ptsParEuro * 20));
-    conseils.push({ type: 'info', titre: 'Estimation de fidélisation', texte: `En moyenne, vos clients atteignent une récompense après ~${visitesNecessaires} visites à 20€/visite. ${totalClients} clients inscrits.` });
+    conseils.push({ type: 'info', titre: 'Estimation de fidélisation', texte: `En moyenne, vos clients atteignent une récompense après ~${visitesNecessaires} visites à 20€/visite.` });
   }
-
   return conseils.slice(0, 3);
 };
 
@@ -67,31 +56,20 @@ export default function Programme() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [stats, setStats] = useState(null);
-  const [form, setForm] = useState({
-    pts_par_euro: 10,
-    recompenses_selectionnees: [], recompenses_custom: [],
-    nouveauCustom: { seuil: '', desc: '' }, erreurCustom: '',
-  });
+  const [form, setForm] = useState({ pts_par_euro: 10, recompenses_selectionnees: [], recompenses_custom: [], nouveauCustom: { seuil: '', desc: '' }, erreurCustom: '' });
 
   useEffect(() => { chargerDonnees(); }, []);
 
   const chargerDonnees = async () => {
     try {
-      const [profilRes, statsRes] = await Promise.all([
-        API.get('/restaurants/profil'),
-        API.get('/restaurants/stats').catch(() => ({ data: { stats: null } })),
-      ]);
+      const [profilRes, statsRes] = await Promise.all([API.get('/restaurants/profil'), API.get('/restaurants/stats').catch(() => ({ data: { stats: null } }))]);
       const r = profilRes.data.restaurant;
       setStats(statsRes.data.stats);
-
       let recompenses = [];
       try {
         recompenses = JSON.parse(r.description_recompense || '[]');
         if (!Array.isArray(recompenses)) recompenses = [];
-      } catch {
-        if (r.description_recompense) recompenses = [{ label: r.description_recompense, seuil: r.seuil_recompense || 500, desc: r.description_recompense }];
-      }
-
+      } catch { if (r.description_recompense) recompenses = [{ label: r.description_recompense, seuil: r.seuil_recompense || 500, desc: r.description_recompense }]; }
       const labels = RECOMPENSES_EXEMPLES.map(r => r.label);
       const custom = recompenses.filter(r => !labels.includes(r.label));
       setForm(f => ({ ...f, pts_par_euro: r.pts_par_euro || 10, recompenses_selectionnees: recompenses, recompenses_custom: custom }));
@@ -123,13 +101,7 @@ export default function Programme() {
     try {
       const restaurantLocal = JSON.parse(localStorage.getItem('restaurant') || '{}');
       const triees = [...form.recompenses_selectionnees].sort((a, b) => a.seuil - b.seuil);
-      await API.post('/auth/onboarding', {
-        couleur: restaurantLocal.couleur || C.primary,
-        logo_emoji: restaurantLocal.logo_emoji || '🥙',
-        pts_par_euro: form.pts_par_euro,
-        seuil_recompense: triees[0].seuil,
-        description_recompense: JSON.stringify(triees),
-      });
+      await API.post('/auth/onboarding', { couleur: restaurantLocal.couleur || C.primary, logo_emoji: restaurantLocal.logo_emoji || '🥙', pts_par_euro: form.pts_par_euro, seuil_recompense: triees[0].seuil, description_recompense: JSON.stringify(triees) });
       const updated = { ...restaurantLocal, pts_par_euro: form.pts_par_euro };
       localStorage.setItem('restaurant', JSON.stringify(updated));
       window.dispatchEvent(new Event('storage'));
@@ -140,39 +112,38 @@ export default function Programme() {
 
   const toutesRecompenses = [...form.recompenses_selectionnees].sort((a, b) => a.seuil - b.seuil);
   const conseils = genererConseils(form, stats);
-
   const conseilStyles = {
     success: { bg: 'rgba(5,150,105,0.06)', border: 'rgba(5,150,105,0.2)', icon: <IconCheck/>, titleColor: '#065F46' },
     warning: { bg: 'rgba(217,119,6,0.06)', border: 'rgba(217,119,6,0.25)', icon: <IconWarn/>, titleColor: '#92400E' },
     info: { bg: 'rgba(41,128,185,0.06)', border: 'rgba(41,128,185,0.2)', icon: <IconInfo/>, titleColor: '#1E3A5F' },
   };
 
-  if (loading) return (
-    <div style={{ minHeight: '100vh', background: C.bg }}><Navbar />
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', color: C.gray, fontSize: 14, fontFamily: 'Lato, sans-serif' }}>Chargement...</div>
-    </div>
-  );
+  if (loading) return <div style={{ minHeight: '100vh', background: C.bg }}><Navbar /><div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', color: C.gray, fontSize: 14, fontFamily: 'Lato, sans-serif' }}>Chargement...</div></div>;
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'Lato, sans-serif' }}>
       <Toaster position="top-right" />
       <Navbar />
 
-      <div className="page-content" style={{ maxWidth: 1000, margin: '0 auto', padding: '36px 32px' }}>
-
-        <div style={{ marginBottom: 32 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: C.primary, marginBottom: 8 }}>Configuration</div>
-          <h1 className="h1-title" style={{ fontSize: 30, fontWeight: 900, color: C.text, letterSpacing: '-0.8px', marginBottom: 4 }}>Mon programme de fidélité</h1>
-          <p style={{ color: C.gray, fontSize: 15 }}>Modifiez les paramètres de votre programme à tout moment.</p>
+      {/* Hero */}
+      <div style={{ background: 'linear-gradient(135deg, #2A1610 0%, #3D1F17 60%, #2A1610 100%)', padding: '36px 32px 80px', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: -60, right: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(181,40,28,0.15)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -40, left: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(217,119,6,0.1)', pointerEvents: 'none' }} />
+        <div style={{ maxWidth: 1000, margin: '0 auto', position: 'relative' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>Configuration</div>
+          <h1 style={{ fontSize: 'clamp(22px,4vw,32px)', fontWeight: 900, color: '#fff', letterSpacing: '-0.8px', marginBottom: 6 }}>Mon programme de fidélité</h1>
+          <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 15 }}>Modifiez les paramètres de votre programme à tout moment</p>
         </div>
+      </div>
 
+      <div className="page-content" style={{ maxWidth: 1000, margin: '-44px auto 0', padding: '0 32px 48px', position: 'relative', zIndex: 10 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
           {/* Colonne gauche */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-            {/* Conseils personnalisés — EN HAUT */}
-            <div style={{ background: '#fff', borderRadius: 20, padding: 26, border: `1px solid ${C.border}`, boxShadow: '0 2px 8px rgba(42,22,16,0.04)' }}>
+            {/* Conseils */}
+            <div style={{ background: '#fff', borderRadius: 20, padding: 26, border: `1px solid ${C.border}`, boxShadow: '0 15px 40px -15px rgba(181,40,28,0.08)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(217,119,6,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>💡</div>
                 <div style={{ fontSize: 14, fontWeight: 900, color: C.text }}>Conseils personnalisés</div>
@@ -185,10 +156,7 @@ export default function Programme() {
                     const s = conseilStyles[c.type];
                     return (
                       <div key={i} style={{ background: s.bg, border: `1px solid ${s.border}`, borderRadius: 12, padding: '12px 14px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                          {s.icon}
-                          <span style={{ fontSize: 12, fontWeight: 900, color: s.titleColor }}>{c.titre}</span>
-                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>{s.icon}<span style={{ fontSize: 12, fontWeight: 900, color: s.titleColor }}>{c.titre}</span></div>
                         <p style={{ fontSize: 12, color: C.text, lineHeight: 1.6, margin: 0, opacity: 0.75 }}>{c.texte}</p>
                       </div>
                     );
@@ -198,23 +166,21 @@ export default function Programme() {
             </div>
 
             {/* Points */}
-            <div style={{ background: '#fff', borderRadius: 20, padding: 26, border: `1px solid ${C.border}`, boxShadow: '0 2px 8px rgba(42,22,16,0.04)' }}>
+            <div style={{ background: '#fff', borderRadius: 20, padding: 26, border: `1px solid ${C.border}`, boxShadow: '0 15px 40px -15px rgba(181,40,28,0.08)' }}>
               <div style={{ fontSize: 14, fontWeight: 900, color: C.text, marginBottom: 18 }}>Règle des points</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#F3F0EA', borderRadius: 12, padding: '14px 16px' }}>
                 <span style={{ fontSize: 14, color: C.text, fontWeight: 700 }}>1€ dépensé =</span>
-                <input type="number" min="1" max="100" value={form.pts_par_euro}
-                  onChange={e => setForm({ ...form, pts_par_euro: parseInt(e.target.value) || 1 })}
+                <input type="number" min="1" max="100" value={form.pts_par_euro} onChange={e => setForm({ ...form, pts_par_euro: parseInt(e.target.value) || 1 })}
                   style={{ width: 64, padding: '8px 10px', borderRadius: 8, border: `2px solid ${C.border}`, fontSize: 18, fontWeight: 900, color: C.primary, textAlign: 'center', outline: 'none', fontFamily: 'Lato, sans-serif' }}
-                  onFocus={e => e.target.style.borderColor = C.primary}
-                  onBlur={e => e.target.style.borderColor = C.border}/>
+                  onFocus={e => e.target.style.borderColor = C.primary} onBlur={e => e.target.style.borderColor = C.border}/>
                 <span style={{ fontSize: 14, color: C.text, fontWeight: 700 }}>points</span>
               </div>
               <p style={{ fontSize: 13, color: C.gray, marginTop: 8 }}>20€ dépensés = <strong style={{ color: C.primary }}>{form.pts_par_euro * 20} points</strong></p>
             </div>
           </div>
 
-          {/* Colonne droite — Récompenses */}
-          <div style={{ background: '#fff', borderRadius: 20, padding: 26, border: `1px solid ${C.border}`, boxShadow: '0 2px 8px rgba(42,22,16,0.04)' }}>
+          {/* Colonne droite */}
+          <div style={{ background: '#fff', borderRadius: 20, padding: 26, border: `1px solid ${C.border}`, boxShadow: '0 15px 40px -15px rgba(181,40,28,0.08)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
               <div style={{ fontSize: 14, fontWeight: 900, color: C.text }}>Récompenses</div>
               {form.recompenses_selectionnees.length > 0 && (

@@ -4,7 +4,7 @@ import API from '../api';
 import toast, { Toaster } from 'react-hot-toast';
 import { Html5Qrcode } from 'html5-qrcode';
 
-const C = { bg: '#FCFBF8', text: '#2A1610', primary: '#B5281C', border: '#E8E1D5', gray: '#9B8E84', amber: '#D97706' };
+const C = { bg: '#FCFBF8', text: '#2A1610', primary: '#B5281C', amber: '#D97706', border: '#E8E1D5', gray: '#9B8E84' };
 
 export default function Caisse() {
   const [code, setCode] = useState('');
@@ -25,7 +25,7 @@ export default function Caisse() {
         html5QrRef.current = new Html5Qrcode('qr-reader');
         await html5QrRef.current.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 200, height: 200 } },
           (text) => { setCode(text); arreterScanner(); toast.success('QR Code scanné !'); }, () => {});
-      } catch { toast.error('Impossible d\'accéder à la caméra'); setScannerActif(false); }
+      } catch { toast.error("Impossible d'accéder à la caméra"); setScannerActif(false); }
     }, 300);
   };
 
@@ -62,56 +62,51 @@ export default function Caisse() {
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'Lato, sans-serif' }}>
       <Toaster position="top-right" />
       <Navbar />
-      <div className="page-content" style={{ maxWidth: 680, margin: '0 auto', padding: '36px 32px' }}>
 
-        <div style={{ marginBottom: 28, animation: 'fadeUp 0.5s ease' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: C.primary, marginBottom: 8 }}>Terminal de caisse</div>
-          <h1 className="h1-title" style={{ fontSize: 30, fontWeight: 900, color: C.text, letterSpacing: '-0.8px' }}>Scanner un client</h1>
-          <p style={{ color: C.gray, fontSize: 15, marginTop: 4 }}>Scannez le QR code ou entrez le code manuellement</p>
+      {/* Hero */}
+      <div style={{ background: 'linear-gradient(135deg, #2A1610 0%, #3D1F17 60%, #2A1610 100%)', padding: '36px 32px 80px', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: -60, right: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(181,40,28,0.15)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -40, left: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(217,119,6,0.1)', pointerEvents: 'none' }} />
+        <div style={{ maxWidth: 680, margin: '0 auto', position: 'relative' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>Terminal de caisse</div>
+          <h1 style={{ fontSize: 'clamp(22px,4vw,32px)', fontWeight: 900, color: '#fff', letterSpacing: '-0.8px', marginBottom: 6 }}>Scanner un client</h1>
+          <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 15 }}>Scannez le QR code ou entrez le code manuellement</p>
         </div>
+      </div>
 
-        {/* Card principale */}
-        <div style={{ background: '#fff', borderRadius: 20, border: `1px solid ${C.border}`, overflow: 'hidden', marginBottom: 20, boxShadow: '0 2px 8px rgba(42,22,16,0.04)', animation: 'fadeUp 0.5s ease 0.1s both' }}>
+      <div className="page-content" style={{ maxWidth: 680, margin: '-44px auto 0', padding: '0 32px 48px', position: 'relative', zIndex: 10 }}>
+
+        <div style={{ background: '#fff', borderRadius: 20, border: `1px solid ${C.border}`, overflow: 'hidden', marginBottom: 20, boxShadow: '0 15px 40px -15px rgba(181,40,28,0.1)' }}>
           <div style={{ padding: '18px 22px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontWeight: 900, fontSize: 15, color: C.text }}>Scanner le QR code</div>
             <button onClick={scannerActif ? arreterScanner : demarrerScanner} style={{ background: scannerActif ? 'rgba(181,40,28,0.08)' : C.primary, color: scannerActif ? C.primary : '#fff', border: scannerActif ? `1px solid rgba(181,40,28,0.25)` : 'none', padding: '9px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Lato, sans-serif', boxShadow: scannerActif ? 'none' : '0 4px 12px rgba(181,40,28,0.3)' }}>
               {scannerActif ? '✕ Arrêter' : 'Ouvrir caméra'}
             </button>
           </div>
-
           <div style={{ padding: 22 }}>
             {scannerActif && (
-              <div style={{ marginBottom: 20, position: 'relative', borderRadius: 14, overflow: 'hidden' }}>
+              <div style={{ marginBottom: 20, borderRadius: 14, overflow: 'hidden' }}>
                 <div id="qr-reader" style={{ width: '100%', borderRadius: 14, overflow: 'hidden' }} />
                 <p style={{ textAlign: 'center', marginTop: 10, fontSize: 13, color: C.gray, fontWeight: 600 }}>Pointez la caméra vers le QR code du client</p>
               </div>
             )}
-
             {scannerActif && <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}><div style={{ flex: 1, height: 1, background: C.border }}/><span style={{ fontSize: 12, color: C.gray, fontWeight: 700 }}>OU</span><div style={{ flex: 1, height: 1, background: C.border }}/></div>}
 
-            {/* Code */}
             <div style={{ marginBottom: 16 }}>
               <label style={{ fontSize: 11, fontWeight: 700, color: C.gray, textTransform: 'uppercase', letterSpacing: 1.5, display: 'block', marginBottom: 8 }}>Code client</label>
               <input value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="Ex: AB3C5DEF" maxLength={8}
                 style={{ width: '100%', padding: '13px 18px', borderRadius: 12, border: `1.5px solid ${C.border}`, fontSize: 22, fontFamily: 'monospace', letterSpacing: 6, color: C.text, outline: 'none', textAlign: 'center', background: '#FAFAF8' }}
-                onFocus={e => e.target.style.borderColor = C.primary}
-                onBlur={e => e.target.style.borderColor = C.border}
-              />
+                onFocus={e => e.target.style.borderColor = C.primary} onBlur={e => e.target.style.borderColor = C.border}/>
             </div>
 
-            {/* Montant */}
             <div style={{ marginBottom: 20 }}>
               <label style={{ fontSize: 11, fontWeight: 700, color: C.gray, textTransform: 'uppercase', letterSpacing: 1.5, display: 'block', marginBottom: 8 }}>Montant du repas (€)</label>
               <div style={{ position: 'relative' }}>
                 <input type="number" value={montant} onChange={e => setMontant(e.target.value)} placeholder="0.00"
                   style={{ width: '100%', padding: '13px 18px 13px 42px', borderRadius: 12, border: `1.5px solid ${C.border}`, fontSize: 20, fontWeight: 700, color: C.text, outline: 'none', background: '#FAFAF8', fontFamily: 'Lato, sans-serif' }}
-                  onFocus={e => e.target.style.borderColor = C.primary}
-                  onBlur={e => e.target.style.borderColor = C.border}
-                />
+                  onFocus={e => e.target.style.borderColor = C.primary} onBlur={e => e.target.style.borderColor = C.border}/>
                 <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 17, color: C.gray, fontWeight: 700 }}>€</span>
-                {montant && ptsGagnes > 0 && (
-                  <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#059669', fontWeight: 700, background: 'rgba(5,150,105,0.08)', padding: '3px 8px', borderRadius: 6 }}>+{ptsGagnes} pts</span>
-                )}
+                {ptsGagnes > 0 && <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#059669', fontWeight: 700, background: 'rgba(5,150,105,0.08)', padding: '3px 8px', borderRadius: 6 }}>+{ptsGagnes} pts</span>}
               </div>
             </div>
 
@@ -121,9 +116,8 @@ export default function Caisse() {
           </div>
         </div>
 
-        {/* Résultat client */}
         {client && (
-          <div style={{ background: '#fff', borderRadius: 20, border: client.recompense_disponible ? `2px solid #059669` : `1px solid ${C.border}`, overflow: 'hidden', boxShadow: client.recompense_disponible ? '0 8px 32px rgba(5,150,105,0.12)' : '0 2px 8px rgba(42,22,16,0.04)', animation: 'fadeUp 0.4s ease' }}>
+          <div style={{ background: '#fff', borderRadius: 20, border: client.recompense_disponible ? `2px solid #059669` : `1px solid ${C.border}`, overflow: 'hidden', boxShadow: '0 15px 40px -15px rgba(181,40,28,0.1)', animation: 'fadeUp 0.4s ease' }}>
             <div style={{ padding: '18px 22px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontWeight: 900, fontSize: 18, color: C.text }}>{client.prenom}</div>
