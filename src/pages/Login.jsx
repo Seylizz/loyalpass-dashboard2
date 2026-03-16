@@ -24,9 +24,10 @@ const validerMdp = (m) => ({ longueur: m.length >= 8, majuscule: /[A-Z]/.test(m)
 
 export default function Login() {
   const [mode, setMode] = useState('connexion');
-  const [form, setForm] = useState({ nom: '', adresse: '', indicatif: '+33', telephone: '', email: '', mot_de_passe: '' });
+  const [form, setForm] = useState({ nom: '', adresse: '', indicatif: '+33', telephone: '', email: '', mot_de_passe: '', confirmer_mot_de_passe: '' });
   const [loading, setLoading] = useState(false);
   const [showMdp, setShowMdp] = useState(false);
+  const [showMdp2, setShowMdp2] = useState(false);
   const [resterConnecte, setResterConnecte] = useState(true);
   const [showForgot, setShowForgot] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
@@ -43,6 +44,7 @@ export default function Login() {
       if (!validerEmail(form.email)) e.email = 'Adresse email invalide';
       const c = validerMdp(form.mot_de_passe);
       if (!c.longueur || !c.majuscule || !c.chiffre) e.mot_de_passe = 'Mot de passe trop faible';
+      if (form.mot_de_passe !== form.confirmer_mot_de_passe) e.confirmer_mot_de_passe = 'Les mots de passe ne correspondent pas';
     } else {
       if (!form.email) e.email = 'Email requis';
       if (!form.mot_de_passe) e.mot_de_passe = 'Mot de passe requis';
@@ -57,11 +59,10 @@ export default function Login() {
     try {
       const endpoint = mode === 'connexion' ? '/auth/connexion' : '/auth/inscription';
       const payload = mode === 'inscription'
-        ? { ...form, telephone: `${form.indicatif}${form.telephone}` }
-        : form;
+        ? { nom: form.nom, adresse: form.adresse, telephone: `${form.indicatif}${form.telephone}`, email: form.email, mot_de_passe: form.mot_de_passe }
+        : { email: form.email, mot_de_passe: form.mot_de_passe };
       const { data } = await API.post(endpoint, payload);
 
-      // Si vérification email requise → rediriger vers la page de vérification
       if (data.email_verification_requise) {
         localStorage.setItem('email_a_verifier', form.email);
         localStorage.setItem('token', data.token);
@@ -74,17 +75,14 @@ export default function Login() {
         return;
       }
 
-      // Connexion normale
       const storage = resterConnecte ? localStorage : sessionStorage;
       storage.setItem('token', data.token);
       storage.setItem('restaurant', JSON.stringify(data.restaurant));
       localStorage.setItem('onboarding_done', 'true');
       localStorage.removeItem('nouvelle_inscription');
-
       toast.success('Connexion réussie !');
       navigate('/dashboard');
     } catch (err) {
-      // Si email non vérifié lors d'une connexion
       if (err.response?.data?.email_verification_requise) {
         localStorage.setItem('email_a_verifier', form.email);
         navigate('/verifier-email');
@@ -110,7 +108,7 @@ export default function Login() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: '1fr 1fr', fontFamily: 'Lato, sans-serif' }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap');@media(max-width:768px){.login-grid{grid-template-columns:1fr!important}.login-left{display:none!important}.login-right{padding:40px 28px!important}}`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap');@media(max-width:768px){.login-left{display:none!important}.login-right{padding:40px 28px!important;grid-column:1/-1}}`}</style>
       <Toaster position="top-right" />
 
       {/* Gauche */}
@@ -155,11 +153,9 @@ export default function Login() {
                   <p style={{ fontSize: 14, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>Entrez votre email pour recevoir un lien de réinitialisation.</p>
                   <input type="email" placeholder="Votre adresse email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} onKeyDown={e => e.key==='Enter'&&handleForgot()}
                     style={{ width: '100%', padding: '13px 16px', borderRadius: 11, border: `1.5px solid ${C.border}`, fontSize: 14, outline: 'none', fontFamily: 'Lato, sans-serif', marginBottom: 14, color: C.text, background: '#FAFAF8' }}
-                    onFocus={e => e.target.style.borderColor = C.primary}
-                    onBlur={e => e.target.style.borderColor = C.border}
-                  />
+                    onFocus={e => e.target.style.borderColor = C.primary} onBlur={e => e.target.style.borderColor = C.border}/>
                   <div style={{ display: 'flex', gap: 10 }}>
-                    <button onClick={handleForgot} disabled={forgotLoading} style={{ flex: 1, background: C.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '12px', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'Lato, sans-serif', boxShadow: '0 4px 12px rgba(181,40,28,0.3)' }}>
+                    <button onClick={handleForgot} disabled={forgotLoading} style={{ flex: 1, background: C.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '12px', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'Lato, sans-serif' }}>
                       {forgotLoading ? 'Envoi...' : 'Envoyer le lien'}
                     </button>
                     <button onClick={() => { setShowForgot(false); setForgotSent(false); setForgotEmail(''); }} style={{ flex: 1, background: '#F3F0EA', color: C.text, border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'Lato, sans-serif' }}>Annuler</button>
@@ -185,7 +181,6 @@ export default function Login() {
             {mode === 'connexion' ? 'Connectez-vous à votre espace restaurateur' : 'Démarrez votre programme de fidélité'}
           </p>
 
-          {/* Toggle */}
           <div style={{ display: 'flex', background: '#fff', borderRadius: 12, padding: 4, marginBottom: 24, border: `1px solid ${C.border}` }}>
             {['connexion','inscription'].map(m => (
               <button key={m} onClick={() => { setMode(m); setErreurs({}); }} style={{ flex: 1, padding: '10px', borderRadius: 9, border: 'none', background: mode===m ? C.primary : 'transparent', color: mode===m ? '#fff' : C.gray, fontWeight: 700, fontSize: 13.5, transition: 'all 0.25s', boxShadow: mode===m ? '0 4px 12px rgba(181,40,28,0.3)' : 'none', fontFamily: 'Lato, sans-serif', cursor: 'pointer' }}>
@@ -246,6 +241,24 @@ export default function Login() {
               )}
               {erreurs.mot_de_passe && <p style={{ fontSize: 12, color: '#E74C3C', marginTop: 4, fontWeight: 700 }}>{erreurs.mot_de_passe}</p>}
             </div>
+
+            {/* Confirmer mot de passe — inscription uniquement */}
+            {mode === 'inscription' && (
+              <div>
+                <div style={{ position: 'relative' }}>
+                  <input placeholder="Confirmer le mot de passe" type={showMdp2?'text':'password'} value={form.confirmer_mot_de_passe} onChange={e => setForm({...form,confirmer_mot_de_passe:e.target.value})} onKeyDown={handleKeyDown}
+                    style={{ width: '100%', padding: '13px 46px 13px 16px', borderRadius: 11, border: `1.5px solid ${erreurs.confirmer_mot_de_passe?'#E74C3C':form.confirmer_mot_de_passe&&form.mot_de_passe===form.confirmer_mot_de_passe?'#059669':C.border}`, fontSize: 14, outline: 'none', background: '#fff', color: C.text, fontFamily: 'Lato, sans-serif' }}
+                    onFocus={e => e.target.style.borderColor = C.primary} onBlur={e => e.target.style.borderColor = erreurs.confirmer_mot_de_passe?'#E74C3C':form.confirmer_mot_de_passe&&form.mot_de_passe===form.confirmer_mot_de_passe?'#059669':C.border}/>
+                  <button onClick={() => setShowMdp2(!showMdp2)} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: C.gray, padding: 0 }}>
+                    {showMdp2 ? '🙈' : '👁️'}
+                  </button>
+                </div>
+                {form.confirmer_mot_de_passe && form.mot_de_passe === form.confirmer_mot_de_passe && (
+                  <p style={{ fontSize: 12, color: '#059669', marginTop: 4, fontWeight: 700 }}>✓ Les mots de passe correspondent</p>
+                )}
+                {erreurs.confirmer_mot_de_passe && <p style={{ fontSize: 12, color: '#E74C3C', marginTop: 4, fontWeight: 700 }}>✕ {erreurs.confirmer_mot_de_passe}</p>}
+              </div>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: -4 }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
